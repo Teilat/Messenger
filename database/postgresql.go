@@ -1,13 +1,29 @@
 package database
 
-import "gorm.io/gorm"
-import "gorm.io/driver/postgres"
+import (
+	"errors"
+	"fmt"
+	"github.com/spf13/viper"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
 
-func InitPostgreSql() *gorm.DB {
-	dsn := "host=localhost user=gorm password=gorm dbname=gorm port=9920 sslmode=disable TimeZone=Asia/Shanghai"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+func InitPostgresql() (*gorm.DB, error) {
+	connString := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
+		viper.Get("postgresql.user"),
+		viper.Get("postgresql.pass"),
+		viper.Get("postgresql.host"),
+		viper.Get("postgresql.port"),
+		viper.Get("postgresql.db"))
+	fmt.Printf("--> Connecting to:%s\n", connString)
+
+	db, err := gorm.Open(postgres.Open(connString), &gorm.Config{})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return db
+	err = db.AutoMigrate(&User{}, &Chat{}, &Message{})
+	if err != nil {
+		return nil, errors.New("error migrating database:" + err.Error())
+	}
+	return db, nil
 }

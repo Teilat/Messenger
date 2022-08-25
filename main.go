@@ -1,15 +1,20 @@
 package main
 
 import (
+	"Messenger/database"
 	"Messenger/internal/config"
+	"Messenger/webapi"
 	"fmt"
-	"github.com/spf13/viper"
 )
 
 func main() {
 	// getting config from config file
 	config.GetConf()
-	for _, s := range viper.AllKeys() {
-		fmt.Printf("%s\n", s)
+	db, err := database.InitPostgresql()
+	if err != nil {
+		return
 	}
+	webapi.Init(db)
+
+	fmt.Println(db.Migrator().GetTables())
 }

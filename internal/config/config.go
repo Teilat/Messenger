@@ -24,7 +24,7 @@ type Postgresql struct {
 }
 
 func GetConf() {
-	viper.AddConfigPath("./config")
+	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
 
