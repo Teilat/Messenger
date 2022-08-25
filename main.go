@@ -4,7 +4,6 @@ import (
 	"Messenger/database"
 	"Messenger/internal/config"
 	"Messenger/webapi"
-	"fmt"
 )
 
 func main() {
@@ -14,7 +13,8 @@ func main() {
 	if err != nil {
 		return
 	}
-	webapi.Init(db)
-
-	fmt.Println(db.Migrator().GetTables())
+	err = webapi.Init(db)
+	if err != nil {
+		return
+	}
 }
