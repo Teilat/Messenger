@@ -1,7 +1,7 @@
 # Messenger
 Frontend [telegram-web](https://github.com/DillistoneFav/telegram-web)
 
-#Backend for messenger
+#Backend for telegram messenger
 - Postgres
 - [GORM](https://github.com/go-gorm/gorm)
 - [Mux](https://github.com/gorilla/mux)

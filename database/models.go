@@ -1,35 +1,35 @@
 package database
 
 import (
-	"github.com/jackc/pgtype"
-	"gorm.io/gorm"
+	"github.com/google/uuid"
+	"time"
 )
 
 type User struct {
-	Id          pgtype.UUID    `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Username    pgtype.Varchar `gorm:"index:,unique"` // starts with @
-	Name        pgtype.Varchar
-	Description pgtype.Varchar
-	PwHash      pgtype.Varchar
-	CreatedAt   pgtype.Timestamp
-	LastOnline  pgtype.Timestamp
-	Image       pgtype.Bytea
+	Id          uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	Username    string    `gorm:"index:,unique"` // starts with @
+	Name        string
+	Description string
+	PwHash      string
+	CreatedAt   time.Time
+	LastOnline  time.Time
+	Image       []byte
 	Chats       []*Chat `gorm:"many2many:user_chats;"` // many to many
 }
 
 type Chat struct {
-	Id           pgtype.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Name         pgtype.Name
-	CreationDate pgtype.Date
+	Id           uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	Name         string
+	CreationDate time.Time
 	Users        []*User   `gorm:"many2many:user_chats;"` // many to many
 	Messages     []Message // one to many
 }
 
 type Message struct {
-	Id        pgtype.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Text      pgtype.Varchar
-	CreatedAt pgtype.Timestamp
-	EditedAt  pgtype.Timestamp
-	DeletedAt gorm.DeletedAt
-	ChatId    pgtype.UUID // one to many chat id
+	Id        uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	Text      string
+	CreatedAt time.Time
+	EditedAt  time.Time
+	DeletedAt time.Time
+	ChatId    uuid.UUID // one to many chat id
 }
