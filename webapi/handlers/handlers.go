@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
@@ -16,16 +16,15 @@ func Init(database *gorm.DB, logger *log.Logger) *handlers {
 	return &handlers{database, logger}
 }
 
-func (h handlers) HandlePing(w http.ResponseWriter, r *http.Request) {
-	resp, err := json.Marshal("pong")
-	if err != nil {
-		h.log.Printf("error while json marshal:%s", err.Error())
-		return
+// HealthCheck  godoc
+// @Summary		Health check
+// @Tags        General
+// @Accept      json
+// @Produce     json
+// @Success     200 {string} string "healthy"
+// @Router      / [get]
+func (h handlers) HandlePing() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.String(http.StatusOK, "OK v1")
 	}
-	_, err = w.Write(resp)
-	if err != nil {
-		h.log.Printf("error while writing response:%s", err.Error())
-		return
-	}
-	return
 }

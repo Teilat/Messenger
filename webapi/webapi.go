@@ -3,23 +3,57 @@ package webapi
 import (
 	"Messenger/webapi/handlers"
 	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 	"log"
-	"net/http"
 	"os"
+	"time"
 )
+
+// @Title     Application Api
+// @Version   1.0
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name token
 
 func Init(database *gorm.DB) error {
 	// swag init --parseDependency --parseInternal -g webapi.go
 	address := fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port"))
-	logger := log.New(os.Stderr, "SQL: ", log.Flags())
-	router := mux.NewRouter()
+
+	//gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
+
+	cookieStore := cookie.NewStore(Secret)
+	cookieStore.Options(sessions.Options{HttpOnly: false, Secure: false, MaxAge: 86400, Path: "/"})
+	router.Use(sessions.Sessions("token", cookieStore))
+	router.Use(gin.Recovery())
+	router.Use(gin.Logger())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost", "http://localhost:*"},
+		AllowMethods:     []string{"PUT", "PATCH", "GET", "DELETE"},
+		AllowHeaders:     []string{"Access-Control-Allow-Headers", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers"},
+		AllowCredentials: true,
+		MaxAge:           24 * time.Hour,
+	}))
+	logger := log.New(os.Stderr, "Handler: ", log.LstdFlags)
 	h := handlers.Init(database, logger)
-	router.HandleFunc("/ping", h.HandlePing)
 
-	logger.Fatal(http.ListenAndServe(address, router))
+	router.GET("/", h.HandlePing())
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.GET("/swagger", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.POST("/login", h.HandlePing())
+	router.POST("/register", h.HandlePing())
+	router.GET("/logout", h.HandlePing())
 
+	err := router.Run(address)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return nil
 }
