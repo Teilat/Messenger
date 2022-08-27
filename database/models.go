@@ -14,7 +14,8 @@ type User struct {
 	CreatedAt   time.Time
 	LastOnline  time.Time
 	Image       []byte
-	Chats       []*Chat `gorm:"many2many:user_chats;"` // many to many
+	Chats       []*Chat   `gorm:"many2many:user_chats;"` // many to many
+	Messages    []Message // one to many
 }
 
 type Chat struct {
@@ -31,5 +32,6 @@ type Message struct {
 	CreatedAt time.Time
 	EditedAt  time.Time
 	DeletedAt time.Time
+	UserId    uuid.UUID // one to many user id
 	ChatId    uuid.UUID // one to many chat id
 }
