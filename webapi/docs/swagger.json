@@ -1,0 +1,215 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Application Api",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "General"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "healthy",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "parameters": [
+                    {
+                        "description": "credentials",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Login"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "logged in user",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "register user",
+                "parameters": [
+                    {
+                        "description": "user",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AddUser"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.AddUser": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "User"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "User"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+78005553535"
+                }
+            }
+        },
+        "models.Chat": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string",
+                    "example": "1662070156"
+                },
+                "lastMessage": {
+                    "type": "string",
+                    "example": "last message"
+                },
+                "lastMessageTime": {
+                    "type": "string",
+                    "example": "1662070156"
+                },
+                "lastMessageUser": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Super Chat"
+                }
+            }
+        },
+        "models.Login": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string",
+                    "example": "What are you taking about?"
+                },
+                "chats": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Chat"
+                    }
+                },
+                "createdAt": {
+                    "type": "string",
+                    "example": "1662070156"
+                },
+                "lastOnline": {
+                    "type": "string",
+                    "example": "1662070156"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "Nickname"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+78005553535"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "token",
+            "in": "header"
+        }
+    }
+}

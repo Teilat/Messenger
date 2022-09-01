@@ -1,0 +1,143 @@
+definitions:
+  models.AddUser:
+    properties:
+      login:
+        example: User
+        type: string
+      name:
+        example: User
+        type: string
+      password:
+        example: password
+        type: string
+      phone:
+        example: "+78005553535"
+        type: string
+    type: object
+  models.Chat:
+    properties:
+      createdAt:
+        example: "1662070156"
+        type: string
+      lastMessage:
+        example: last message
+        type: string
+      lastMessageTime:
+        example: "1662070156"
+        type: string
+      lastMessageUser:
+        example: user
+        type: string
+      name:
+        example: Super Chat
+        type: string
+    type: object
+  models.Login:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.User:
+    properties:
+      bio:
+        example: What are you taking about?
+        type: string
+      chats:
+        items:
+          $ref: '#/definitions/models.Chat'
+        type: array
+      createdAt:
+        example: "1662070156"
+        type: string
+      lastOnline:
+        example: "1662070156"
+        type: string
+      name:
+        example: John
+        type: string
+      nickname:
+        example: Nickname
+        type: string
+      phone:
+        example: "+78005553535"
+        type: string
+    type: object
+info:
+  contact: {}
+  title: Application Api
+  version: "1.0"
+paths:
+  /:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: healthy
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - General
+  /login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: logged in user
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Login user
+      tags:
+      - Auth
+  /logout:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: Logout user
+      tags:
+      - Auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: register user
+      tags:
+      - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: token
+    type: apiKey
+swagger: "2.0"
