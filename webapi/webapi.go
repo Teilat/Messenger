@@ -1,6 +1,8 @@
 package webapi
 
 import (
+	_ "Messenger/webapi/docs"
+	"Messenger/webapi/globals"
 	"Messenger/webapi/handlers"
 	"fmt"
 	"github.com/gin-contrib/cors"
@@ -29,13 +31,13 @@ func Init(database *gorm.DB) error {
 	//gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	cookieStore := cookie.NewStore(Secret)
+	cookieStore := cookie.NewStore(globals.Secret)
 	cookieStore.Options(sessions.Options{HttpOnly: false, Secure: false, MaxAge: 86400, Path: "/"})
 	router.Use(sessions.Sessions("token", cookieStore))
 	router.Use(gin.Recovery())
 	router.Use(gin.Logger())
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost", "http://localhost:*"},
+		AllowOrigins:     []string{"http://localhost", "http://localhost:*", "http://192.168.1.110:*", "http://192.168.1.109:*"},
 		AllowMethods:     []string{"PUT", "PATCH", "GET", "DELETE"},
 		AllowHeaders:     []string{"Access-Control-Allow-Headers", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers"},
 		AllowCredentials: true,
@@ -47,9 +49,9 @@ func Init(database *gorm.DB) error {
 	router.GET("/", h.HandlePing())
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.GET("/swagger", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.POST("/login", h.HandlePing())
-	router.POST("/register", h.HandlePing())
-	router.GET("/logout", h.HandlePing())
+	router.POST("/login", h.LoginPostHandler())
+	router.POST("/register", h.RegisterHandler())
+	router.GET("/logout", h.LogoutGetHandler())
 
 	err := router.Run(address)
 	if err != nil {
