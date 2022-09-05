@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"Messenger/database"
+	"Messenger/internal/resolver"
+	"Messenger/webapi/converters"
 	"Messenger/webapi/globals"
 	"Messenger/webapi/helpers"
 	"Messenger/webapi/models"
@@ -10,7 +12,6 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 type handlers struct {
@@ -76,28 +77,8 @@ func (h handlers) LoginPostHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to save session"})
 			return
 		}
-		User := database.User{Username: params.Username}
-		h.db.Find(&User)
-		chats := []models.Chat{}
-		for _, chat := range User.Chats {
-			chats = append(chats, models.Chat{
-				Name:            chat.Name,
-				CreatedAt:       strconv.FormatInt(chat.CreationDate.Unix(), 10),
-				LastMessage:     "",
-				LastMessageUser: "",
-				LastMessageTime: "",
-			})
-		}
 
-		c.JSON(http.StatusOK, models.User{
-			Username:   User.Username,
-			Nickname:   User.Name,
-			Bio:        User.Bio,
-			Phone:      User.Phone,
-			CreatedAt:  strconv.FormatInt(User.CreatedAt.Unix(), 10),
-			LastOnline: strconv.FormatInt(User.LastOnline.Unix(), 10),
-			Chats:      chats,
-		})
+		c.JSON(http.StatusOK, converters.UserToApiUser(resolver.GetUserByUsername(h.db, params.Username)))
 	}
 }
 

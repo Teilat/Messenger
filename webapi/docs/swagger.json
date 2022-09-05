@@ -141,16 +141,7 @@
                     "example": "1662070156"
                 },
                 "lastMessage": {
-                    "type": "string",
-                    "example": "last message"
-                },
-                "lastMessageTime": {
-                    "type": "string",
-                    "example": "1662070156"
-                },
-                "lastMessageUser": {
-                    "type": "string",
-                    "example": "user"
+                    "$ref": "#/definitions/models.Message"
                 },
                 "name": {
                     "type": "string",
@@ -166,6 +157,20 @@
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "models.Message": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "user": {
+                    "type": "boolean"
                 }
             }
         },

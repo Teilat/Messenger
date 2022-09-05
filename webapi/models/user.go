@@ -24,8 +24,8 @@ type AddUser struct {
 
 type UpdateUser struct {
 	Name     string `json:"name"     example:"John"`
-	Surname  string `json:"surname"  example:"Joe"`
 	Nickname string `json:"nickname" example:"Nickname"`
+	Bio      string `json:"bio" example:"Who are you talking about"`
 }
 
 type DeleteUser struct {

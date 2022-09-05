@@ -20,11 +20,11 @@ type User struct {
 }
 
 type Chat struct {
-	Id           uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Name         string
-	CreationDate time.Time `gorm:"default:(now() at time zone 'msk')"`
-	Users        []*User   `gorm:"many2many:user_chats;"` // many to many
-	Messages     []Message // one to many
+	Id        uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	Name      string
+	CreatedAt time.Time `gorm:"default:(now() at time zone 'msk')"`
+	Users     []*User   `gorm:"many2many:user_chats;"` // many to many
+	Messages  []Message // one to many
 }
 
 type Message struct {
