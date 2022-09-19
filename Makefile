@@ -17,6 +17,9 @@ all: build
 
 build: windows linux ## Default: build for windows and linux
 
+gen-swagger: vendor
+	cd ./webapi && swag init --parseDependency --parseInternal -g webapi.go
+
 windows: vendor $(BUILD_FOLDER)/windows/logconfig.json ## Build artifacts for windows
 	@printf $(PRINTF_FORMAT) BINARY_NAME: $(WIN_BINARY_NAME)
 	@printf $(PRINTF_FORMAT) BINARY_BUILD_DATE: $(BINARY_BUILD_DATE)

@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func UserToApiUser(user database.User) models.User {
+func UserToApiUser(user *database.User) models.User {
 	return models.User{
 		Username:   user.Username,
 		Nickname:   user.Name,
@@ -22,12 +22,13 @@ func chatsToApiUserChats(chats []*database.Chat) []models.Chat {
 	res := []models.Chat{}
 	for _, chat := range chats {
 		res = append(res, models.Chat{
+			Id:        0,
 			Name:      chat.Name,
 			CreatedAt: strconv.FormatInt(chat.CreatedAt.Unix(), 10),
 			LastMessage: models.Message{
 				Text:      "",
 				CreatedAt: "",
-				User:      false,
+				User:      "",
 			},
 		})
 	}

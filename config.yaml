@@ -5,5 +5,5 @@ Postgresql:
   Pass: "postgrespw"
   Db: "mainDb"
 Api:
-  Address: "192.168.1.134"
+  Address: "192.168.1.44"
   Port: 8080

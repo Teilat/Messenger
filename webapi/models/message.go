@@ -3,5 +3,7 @@ package models
 type Message struct {
 	Text      string
 	CreatedAt string
-	User      bool
+	EditedAt  string
+	DeletedAt string
+	User      string
 }

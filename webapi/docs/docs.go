@@ -38,6 +38,86 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "/chat": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "create chat",
+                "parameters": [
+                    {
+                        "description": "chat params",
+                        "name": "chat",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AddChat"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "created chat",
+                        "schema": {
+                            "$ref": "#/definitions/models.Chat"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/:id": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "upgrade request to ws",
+                "responses": {
+                    "101": {
+                        "description": "ws struct",
+                        "schema": {
+                            "$ref": "#/definitions/models.WSChat"
+                        }
+                    }
+                }
+            }
+        },
+        "/chats": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "get all chats",
+                "responses": {
+                    "200": {
+                        "description": "list of chats for current user",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Chat"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "consumes": [
@@ -122,6 +202,15 @@ const docTemplate_swagger = `{
         }
     },
     "definitions": {
+        "models.AddChat": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Super Chat"
+                }
+            }
+        },
         "models.AddUser": {
             "type": "object",
             "properties": {
@@ -150,6 +239,9 @@ const docTemplate_swagger = `{
                     "type": "string",
                     "example": "1662070156"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "lastMessage": {
                     "$ref": "#/definitions/models.Message"
                 },
@@ -176,11 +268,17 @@ const docTemplate_swagger = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "deletedAt": {
+                    "type": "string"
+                },
+                "editedAt": {
+                    "type": "string"
+                },
                 "text": {
                     "type": "string"
                 },
                 "user": {
-                    "type": "boolean"
+                    "type": "string"
                 }
             }
         },
@@ -216,6 +314,17 @@ const docTemplate_swagger = `{
                 "phone": {
                     "type": "string",
                     "example": "+78005553535"
+                }
+            }
+        },
+        "models.WSChat": {
+            "type": "object",
+            "properties": {
+                "newMessages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Message"
+                    }
                 }
             }
         }

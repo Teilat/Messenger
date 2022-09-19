@@ -1,29 +1,35 @@
 package handlers
 
 import (
-	"Messenger/database"
 	"Messenger/internal/resolver"
 	"Messenger/webapi/converters"
 	"Messenger/webapi/globals"
 	"Messenger/webapi/helpers"
 	"Messenger/webapi/models"
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
 )
 
 type handlers struct {
-	db  *gorm.DB
-	log *log.Logger
+	db       *gorm.DB
+	log      *log.Logger
+	upgrader *websocket.Upgrader
 }
 
 func Init(database *gorm.DB, logger *log.Logger) *handlers {
-	return &handlers{database, logger}
+	return &handlers{
+		database,
+		logger,
+		&websocket.Upgrader{},
+	}
 }
 
-// HealthCheck  godoc
+// HandlePing   godoc
 // @Summary		Health check
 // @Tags        General
 // @Accept      json
@@ -58,7 +64,7 @@ func (h handlers) LoginPostHandler() gin.HandlerFunc {
 
 		err := c.BindJSON(&params)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
 			return
 		}
 
@@ -127,21 +133,98 @@ func (h handlers) RegisterHandler() gin.HandlerFunc {
 			return
 		}
 
-		var params models.AddUser
+		var user models.AddUser
+		err := c.BindJSON(&user)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
+		}
+
+		err = resolver.CreateUser(h.db, user)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to register"})
+		}
+	}
+}
+
+// GetChatHandler  godoc
+// @Summary     upgrade request to ws
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Success     101 {object} models.WSChat "ws struct"
+// @Error       500 {string} string
+// @Router      /chat/:id [post]
+func (h handlers) GetChatHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//upgrade get request to websocket protocol
+		var id = c.Param("id")
+		ws, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer func(ws *websocket.Conn) {
+			err := ws.Close()
+			if err != nil {
+				h.log.Fatal(err)
+			}
+		}(ws)
+
+		resolver.ChatWS(h.db, ws, id)
+	}
+}
+
+// GetAllChatsHandler  godoc
+// @Summary     get all chats
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Success     200 {array} models.Chat "list of chats for current user"
+// @Error       500 {string} string
+// @Router      /chats [get]
+func (h handlers) GetAllChatsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		sessionUser := session.Get(globals.Userkey)
+		if sessionUser == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"content": "Please login first"})
+			return
+		}
+		c.JSON(http.StatusOK, converters.ChatsToApiChats(resolver.GetUserChats(h.db, sessionUser.(string))))
+	}
+}
+
+// CreateChatHandler  godoc
+// @Summary     create chat
+// @Tags        Chat
+// @Accept      json
+// @Param       chat body models.AddChat true "chat params"
+// @Produce     json
+// @Success     200 {object} models.Chat "created chat"
+// @Error       500 {string} string
+// @Router      /chat [post]
+func (h handlers) CreateChatHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		sessionUser := session.Get(globals.Userkey)
+		if sessionUser == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"content": "Please login first"})
+			return
+		}
+
+		var params models.AddChat
 		err := c.BindJSON(&params)
 		if err != nil {
 			log.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to register"})
+			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
+		}
+		params.Users = append(params.Users, sessionUser.(string))
+		chat, err := resolver.CreateChat(h.db, params)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to create chat"})
 		}
 
-		res := h.db.Create(&database.User{
-			Username: params.Username,
-			Name:     params.Nickname,
-			Phone:    params.Phone,
-			PwHash:   params.Password,
-		})
-		if res.Error != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to register"})
-		}
+		c.JSON(http.StatusOK, converters.ChatToApiChat(chat))
 	}
 }

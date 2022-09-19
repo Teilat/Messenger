@@ -24,7 +24,7 @@ import (
 // @in header
 // @name token
 
-func Init(database *gorm.DB) error {
+func Run(database *gorm.DB) error {
 	// swag init --parseDependency --parseInternal -g webapi.go
 	address := fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port"))
 
@@ -37,9 +37,9 @@ func Init(database *gorm.DB) error {
 	router.Use(gin.Recovery())
 	router.Use(gin.Logger())
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost", "http://localhost:*", "http://192.168.1.110:*", "http://192.168.1.109:*"},
-		AllowMethods:     []string{"PUT", "PATCH", "GET", "DELETE"},
-		AllowHeaders:     []string{"Access-Control-Allow-Headers", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers"},
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST"},
+		AllowHeaders:     []string{"Access-Control-Allow-Headers", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Access-Control-Allow-Credentials"},
 		AllowCredentials: true,
 		MaxAge:           24 * time.Hour,
 	}))
@@ -53,6 +53,9 @@ func Init(database *gorm.DB) error {
 	router.POST("/register", h.RegisterHandler())
 	router.GET("/logout", h.LogoutGetHandler())
 
+	router.GET("/chats", h.GetAllChatsHandler())
+	router.POST("/chat", h.CreateChatHandler())
+	router.GET("/chat/:id", h.GetChatHandler())
 	err := router.Run(address)
 	if err != nil {
 		log.Fatal(err)

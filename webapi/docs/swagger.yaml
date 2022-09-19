@@ -1,4 +1,10 @@
 definitions:
+  models.AddChat:
+    properties:
+      name:
+        example: Super Chat
+        type: string
+    type: object
   models.AddUser:
     properties:
       login:
@@ -19,6 +25,8 @@ definitions:
       createdAt:
         example: "1662070156"
         type: string
+      id:
+        type: integer
       lastMessage:
         $ref: '#/definitions/models.Message'
       name:
@@ -36,10 +44,14 @@ definitions:
     properties:
       createdAt:
         type: string
+      deletedAt:
+        type: string
+      editedAt:
+        type: string
       text:
         type: string
       user:
-        type: boolean
+        type: string
     type: object
   models.User:
     properties:
@@ -66,6 +78,13 @@ definitions:
         example: "+78005553535"
         type: string
     type: object
+  models.WSChat:
+    properties:
+      newMessages:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
+    type: object
 info:
   contact: {}
   title: Application Api
@@ -85,6 +104,57 @@ paths:
       summary: Health check
       tags:
       - General
+  /chat:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: chat params
+        in: body
+        name: chat
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddChat'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: created chat
+          schema:
+            $ref: '#/definitions/models.Chat'
+      summary: create chat
+      tags:
+      - Chat
+  /chat/:id:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: ws struct
+          schema:
+            $ref: '#/definitions/models.WSChat'
+      summary: upgrade request to ws
+      tags:
+      - Chat
+  /chats:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: list of chats for current user
+          schema:
+            items:
+              $ref: '#/definitions/models.Chat'
+            type: array
+      summary: get all chats
+      tags:
+      - Chat
   /login:
     post:
       consumes:

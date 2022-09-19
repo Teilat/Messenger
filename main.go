@@ -13,7 +13,8 @@ func main() {
 	if err != nil {
 		return
 	}
-	err = webapi.Init(db)
+
+	err = webapi.Run(db)
 	if err != nil {
 		return
 	}
