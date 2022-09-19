@@ -1,5 +1,5 @@
 # Messenger
-Frontend [telegram-web](https://github.com/DillistoneFav/telegram-web)
+Frontend [messenger-web](https://github.com/DillistoneFav/telegram-web)
 
 #Backend for telegram messenger
 - Postgres
