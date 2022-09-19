@@ -1,10 +1,12 @@
 package webapi
 
 import (
+	"Messenger/internal/resolver"
 	_ "Messenger/webapi/docs"
 	"Messenger/webapi/globals"
 	"Messenger/webapi/handlers"
 	"fmt"
+	session "github.com/ScottHuangZL/gin-jwt-session"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -30,21 +32,24 @@ func Run(database *gorm.DB) error {
 
 	//gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-
+	session.NewStore()
 	cookieStore := cookie.NewStore(globals.Secret)
-	cookieStore.Options(sessions.Options{HttpOnly: false, Secure: false, MaxAge: 86400, Path: "/"})
+	cookieStore.Options(sessions.Options{HttpOnly: false, Secure: false, MaxAge: 86400, Path: "/", Domain: "localhost"})
+	router.Use(session.ClearMiddleware()) //important to avoid mem leak
 	router.Use(sessions.Sessions("token", cookieStore))
 	router.Use(gin.Recovery())
 	router.Use(gin.Logger())
 	router.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
-		AllowMethods:     []string{"GET", "POST"},
-		AllowHeaders:     []string{"Access-Control-Allow-Headers", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Access-Control-Allow-Credentials"},
+		AllowOrigins:     []string{"http://192.168.2.109:3000", "http://192.168.1.44:8080", "http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders:     []string{"Access-Control-Allow-Headers", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Access-Control-Allow-Credentials", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           24 * time.Hour,
+		AllowWebSockets:  true,
 	}))
 	logger := log.New(os.Stderr, "Handler: ", log.LstdFlags)
-	h := handlers.Init(database, logger)
+	res := resolver.Init(database, logger)
+	h := handlers.Init(logger, res)
 
 	router.GET("/", h.HandlePing())
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -55,7 +60,8 @@ func Run(database *gorm.DB) error {
 
 	router.GET("/chats", h.GetAllChatsHandler())
 	router.POST("/chat", h.CreateChatHandler())
-	router.GET("/chat/:id", h.GetChatHandler())
+	router.GET("/chat/:id", h.WSChatHandler())
+
 	err := router.Run(address)
 	if err != nil {
 		log.Fatal(err)

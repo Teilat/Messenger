@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"Messenger/database"
 	"Messenger/internal/resolver"
 	"Messenger/webapi/converters"
 	"Messenger/webapi/globals"
@@ -10,22 +11,24 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"gorm.io/gorm"
 	"log"
 	"net/http"
 )
 
-type handlers struct {
-	db       *gorm.DB
+type Handlers struct {
 	log      *log.Logger
 	upgrader *websocket.Upgrader
+	Resolver *resolver.Resolver
 }
 
-func Init(database *gorm.DB, logger *log.Logger) *handlers {
-	return &handlers{
-		database,
-		logger,
-		&websocket.Upgrader{},
+func Init(logger *log.Logger, res *resolver.Resolver) *Handlers {
+	return &Handlers{
+		log: logger,
+		upgrader: &websocket.Upgrader{
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+		},
+		Resolver: res,
 	}
 }
 
@@ -36,7 +39,7 @@ func Init(database *gorm.DB, logger *log.Logger) *handlers {
 // @Produce     json
 // @Success     200 {string} string "healthy"
 // @Router      / [get]
-func (h handlers) HandlePing() gin.HandlerFunc {
+func (h Handlers) HandlePing() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.String(http.StatusOK, "OK v1")
 	}
@@ -52,7 +55,7 @@ func (h handlers) HandlePing() gin.HandlerFunc {
 // @Error       500 {string} string
 // @Error       404 {string} string
 // @Router      /login [post]
-func (h handlers) LoginPostHandler() gin.HandlerFunc {
+func (h Handlers) LoginPostHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		sessionUser := session.Get(globals.Userkey)
@@ -73,7 +76,7 @@ func (h handlers) LoginPostHandler() gin.HandlerFunc {
 			return
 		}
 
-		if !helpers.CheckUserPass(h.db, params) {
+		if !helpers.CheckUserPass(h.Resolver.Db, params) {
 			c.JSON(http.StatusUnauthorized, gin.H{"content": "Incorrect username or password"})
 			return
 		}
@@ -84,7 +87,7 @@ func (h handlers) LoginPostHandler() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, converters.UserToApiUser(resolver.GetUserByUsername(h.db, params.Username)))
+		c.JSON(http.StatusOK, converters.UserToApiUser(h.Resolver.GetUserByUsername(params.Username), []*database.Chat{}))
 	}
 }
 
@@ -96,7 +99,7 @@ func (h handlers) LoginPostHandler() gin.HandlerFunc {
 // @Success     200
 // @Error       500 {string} string
 // @Router      /logout [get]
-func (h handlers) LogoutGetHandler() gin.HandlerFunc {
+func (h Handlers) LogoutGetHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		user := session.Get(globals.Userkey)
@@ -124,7 +127,7 @@ func (h handlers) LogoutGetHandler() gin.HandlerFunc {
 // @Success     200
 // @Error       500 {string} string
 // @Router      /register [post]
-func (h handlers) RegisterHandler() gin.HandlerFunc {
+func (h Handlers) RegisterHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		sessionUser := session.Get(globals.Userkey)
@@ -140,14 +143,14 @@ func (h handlers) RegisterHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
 		}
 
-		err = resolver.CreateUser(h.db, user)
+		err = h.Resolver.CreateUser(user)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to register"})
 		}
 	}
 }
 
-// GetChatHandler  godoc
+// WSChatHandler  godoc
 // @Summary     upgrade request to ws
 // @Tags        Chat
 // @Accept      json
@@ -155,7 +158,7 @@ func (h handlers) RegisterHandler() gin.HandlerFunc {
 // @Success     101 {object} models.WSChat "ws struct"
 // @Error       500 {string} string
 // @Router      /chat/:id [post]
-func (h handlers) GetChatHandler() gin.HandlerFunc {
+func (h Handlers) WSChatHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//upgrade get request to websocket protocol
 		var id = c.Param("id")
@@ -171,7 +174,7 @@ func (h handlers) GetChatHandler() gin.HandlerFunc {
 			}
 		}(ws)
 
-		resolver.ChatWS(h.db, ws, id)
+		h.Resolver.ChatWS(ws, id)
 	}
 }
 
@@ -183,7 +186,7 @@ func (h handlers) GetChatHandler() gin.HandlerFunc {
 // @Success     200 {array} models.Chat "list of chats for current user"
 // @Error       500 {string} string
 // @Router      /chats [get]
-func (h handlers) GetAllChatsHandler() gin.HandlerFunc {
+func (h Handlers) GetAllChatsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		sessionUser := session.Get(globals.Userkey)
@@ -191,7 +194,7 @@ func (h handlers) GetAllChatsHandler() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"content": "Please login first"})
 			return
 		}
-		c.JSON(http.StatusOK, converters.ChatsToApiChats(resolver.GetUserChats(h.db, sessionUser.(string))))
+		c.JSON(http.StatusOK, converters.ChatsToApiChats(h.Resolver.GetUserChats(sessionUser.(string))))
 	}
 }
 
@@ -204,7 +207,7 @@ func (h handlers) GetAllChatsHandler() gin.HandlerFunc {
 // @Success     200 {object} models.Chat "created chat"
 // @Error       500 {string} string
 // @Router      /chat [post]
-func (h handlers) CreateChatHandler() gin.HandlerFunc {
+func (h Handlers) CreateChatHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		sessionUser := session.Get(globals.Userkey)
@@ -220,7 +223,7 @@ func (h handlers) CreateChatHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
 		}
 		params.Users = append(params.Users, sessionUser.(string))
-		chat, err := resolver.CreateChat(h.db, params)
+		chat, err := h.Resolver.CreateChat(params)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to create chat"})
 		}

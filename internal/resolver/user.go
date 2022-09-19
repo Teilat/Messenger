@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func CreateUser(db *gorm.DB, user models.AddUser) error {
-	res := db.Create(&database.User{
+func (r Resolver) CreateUser(user models.AddUser) error {
+	res := r.Db.Create(&database.User{
 		Username: user.Username,
 		Name:     user.Nickname,
 		Phone:    user.Phone,
@@ -22,11 +22,11 @@ func CreateUser(db *gorm.DB, user models.AddUser) error {
 	return nil
 }
 
-func GetUserByUsername(db *gorm.DB, username string) *database.User {
+func (r Resolver) GetUserByUsername(username string) *database.User {
 	user := database.User{}
-	db.Where("username = ?", username).Preload("Chats").First(&user)
-	fmt.Println("found:", user)
-	updateLastOnline(db, username)
+	r.Db.Where("username = ?", username).Preload("Chats").First(&user)
+	fmt.Println("found:", user.Username)
+	updateLastOnline(r.Db, username)
 	return &user
 }
 

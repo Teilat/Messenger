@@ -9,8 +9,10 @@ import (
 	"time"
 )
 
-func ChatWS(db *gorm.DB, ws *websocket.Conn, id string) {
+func (r Resolver) ChatWS(ws *websocket.Conn, chatId string) {
+
 	for {
+		ws.ReadMessage()
 		err := ws.WriteJSON("dfg")
 		if err != nil {
 			fmt.Println(err)
@@ -19,11 +21,11 @@ func ChatWS(db *gorm.DB, ws *websocket.Conn, id string) {
 	}
 }
 
-func CreateChat(db *gorm.DB, chat models.AddChat) (*database.Chat, error) {
-	res := db.Create(&database.Chat{
+func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
+	res := r.Db.Create(&database.Chat{
 		Name:      chat.Name,
 		CreatedAt: time.Now(),
-		Users:     makeUsersForChat(db, chat.Users),
+		Users:     makeUsersForChat(r.Db, chat.Users),
 		Messages:  nil,
 	})
 	if res.Error != nil {
@@ -33,15 +35,15 @@ func CreateChat(db *gorm.DB, chat models.AddChat) (*database.Chat, error) {
 	return res.Statement.Model.(*database.Chat), nil
 }
 
+func (r Resolver) GetUserChats(userId string) []*database.Chat {
+	var chats []*database.Chat
+	r.Db.Preload("Users").Where("users IN ?", []string{userId}).Find(&chats)
+	fmt.Println("find: ", chats)
+	return chats
+}
+
 func makeUsersForChat(db *gorm.DB, usernames []string) []*database.User {
 	res := make([]*database.User, 0)
 	db.Where("username IN ?", usernames).Find(&res)
 	return res
-}
-
-func GetUserChats(db *gorm.DB, userId string) []*database.Chat {
-	var chats []*database.Chat
-	db.Preload("Users").Where("users IN ?", []string{userId}).Find(&chats)
-	fmt.Println("find: ", chats)
-	return chats
 }
