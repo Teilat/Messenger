@@ -3,9 +3,13 @@ package webapi
 import (
 	"Messenger/internal/resolver"
 	_ "Messenger/webapi/docs"
+	"Messenger/webapi/globals"
 	"Messenger/webapi/handlers"
 	"fmt"
+	session "github.com/ScottHuangZL/gin-jwt-session"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
@@ -28,6 +32,11 @@ func Run(database *gorm.DB) error {
 
 	//gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+	session.NewStore()
+	cookieStore := cookie.NewStore(globals.Secret)
+	cookieStore.Options(sessions.Options{HttpOnly: false, Secure: false, MaxAge: 86400, Path: "/", Domain: "localhost"})
+	router.Use(session.ClearMiddleware()) //important to avoid mem leak
+	router.Use(sessions.Sessions("token", cookieStore))
 	router.Use(gin.Recovery())
 	router.Use(gin.Logger())
 	router.Use(cors.New(cors.Config{
