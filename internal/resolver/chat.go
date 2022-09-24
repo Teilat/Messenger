@@ -37,8 +37,20 @@ func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
 
 func (r Resolver) GetUserChats(userId string) []*database.Chat {
 	var chats []*database.Chat
-	r.Db.Preload("Users").Where("users IN ?", []string{userId}).Find(&chats)
-	fmt.Println("find: ", chats)
+	var res []*database.Chat
+	r.Db.
+		Preload("Users").
+		Find(&chats)
+
+	// TODO сделать фильтауию через запрос
+	for _, chat := range chats {
+		for _, user := range chat.Users {
+			if user.Username == userId {
+				res = append(res, chat)
+			}
+		}
+	}
+	fmt.Println("find: ", len(res))
 	return chats
 }
 

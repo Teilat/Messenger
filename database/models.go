@@ -15,8 +15,8 @@ type User struct {
 	CreatedAt  time.Time `gorm:"default:(now() at time zone 'msk')"`
 	LastOnline time.Time `gorm:"default:(now() at time zone 'msk')"`
 	Image      []byte
-	Chats      []*Chat   `gorm:"many2many:user_chats;"` // many to many
-	Messages   []Message // one to many
+	Chats      []*Chat   `gorm:"many2many:user_chats;"`                   // many to many
+	Messages   []Message `gorm:"foreignKey:Username;references:Username"` // one to many
 }
 
 type Chat struct {
@@ -24,7 +24,7 @@ type Chat struct {
 	Name      string
 	CreatedAt time.Time `gorm:"default:(now() at time zone 'msk')"`
 	Users     []*User   `gorm:"many2many:user_chats;"` // many to many
-	Messages  []Message // one to many
+	Messages  []Message `gorm:"foreignKey:ChatId"`     // one to many
 }
 
 type Message struct {
@@ -33,6 +33,6 @@ type Message struct {
 	CreatedAt time.Time `gorm:"default:(now() at time zone 'msk')"`
 	EditedAt  time.Time
 	DeletedAt time.Time
-	UserId    uuid.UUID // one to many user id
+	Username  string    // one to many username
 	ChatId    uuid.UUID // one to many chat id
 }

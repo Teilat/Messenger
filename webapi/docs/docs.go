@@ -170,6 +170,36 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "/message": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Message"
+                ],
+                "summary": "create message",
+                "parameters": [
+                    {
+                        "description": "msg params",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AddMessage"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "consumes": [
@@ -208,6 +238,26 @@ const docTemplate_swagger = `{
                 "name": {
                     "type": "string",
                     "example": "Super Chat"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "models.AddMessage": {
+            "type": "object",
+            "properties": {
+                "chatId": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "user": {
+                    "type": "string"
                 }
             }
         },
@@ -266,9 +316,6 @@ const docTemplate_swagger = `{
             "type": "object",
             "properties": {
                 "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
                     "type": "string"
                 },
                 "editedAt": {

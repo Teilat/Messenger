@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"Messenger/database"
 	"Messenger/internal/resolver"
 	"Messenger/webapi/converters"
 	"Messenger/webapi/globals"
@@ -87,7 +86,7 @@ func (h Handlers) LoginPostHandler() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, converters.UserToApiUser(h.Resolver.GetUserByUsername(params.Username), []*database.Chat{}))
+		c.JSON(http.StatusOK, converters.UserToApiUser(h.Resolver.GetUserByUsername(params.Username), h.Resolver.GetUserChats(params.Username)))
 	}
 }
 
@@ -229,5 +228,57 @@ func (h Handlers) CreateChatHandler() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, converters.ChatToApiChat(chat))
+	}
+}
+
+// CreateMessageHandler  godoc
+// @Summary     create message
+// @Tags        Message
+// @Accept      json
+// @Param       message body models.AddMessage true "msg params"
+// @Produce     json
+// @Success     200
+// @Error       500 {string} string
+// @Router      /message [post]
+func (h Handlers) CreateMessageHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := sessions.Default(c)
+		sessionUser := session.Get(globals.Userkey)
+		if sessionUser == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"content": "Please login first"})
+			return
+		}
+
+		var params models.AddMessage
+		err := c.BindJSON(&params)
+		if err != nil {
+			log.Println(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
+		}
+		params.User = sessionUser.(string)
+		err = h.Resolver.CreateMessage(params)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to create chat"})
+		}
+
+		c.JSON(http.StatusOK, "")
+	}
+}
+
+func (h Handlers) EditMessageHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+	}
+}
+
+func (h Handlers) DeleteMessageHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+	}
+}
+
+func (h Handlers) GetMessagesBatchHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// var offset = c.Param("offset")
 	}
 }

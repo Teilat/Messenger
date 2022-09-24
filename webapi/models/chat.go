@@ -1,10 +1,11 @@
 package models
 
 type Chat struct {
-	Id          uint32  `json:"id"`
-	Name        string  `json:"name"     example:"Super Chat"`
-	CreatedAt   string  `json:"createdAt" example:"1662070156" description:"unix time"`
-	LastMessage Message `json:"lastMessage"`
+	Id          uint32   `json:"id"`
+	Name        string   `json:"name"     example:"Super Chat"`
+	CreatedAt   string   `json:"createdAt" example:"1662070156" description:"unix time"`
+	LastMessage Message  `json:"lastMessage"`
+	Users       []string `json:"users"`
 }
 
 type AddChat struct {

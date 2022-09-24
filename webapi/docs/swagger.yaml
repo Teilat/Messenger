@@ -4,6 +4,19 @@ definitions:
       name:
         example: Super Chat
         type: string
+      users:
+        items:
+          type: string
+        type: array
+    type: object
+  models.AddMessage:
+    properties:
+      chatId:
+        type: integer
+      text:
+        type: string
+      user:
+        type: string
     type: object
   models.AddUser:
     properties:
@@ -43,8 +56,6 @@ definitions:
   models.Message:
     properties:
       createdAt:
-        type: string
-      deletedAt:
         type: string
       editedAt:
         type: string
@@ -188,6 +199,25 @@ paths:
       summary: Logout user
       tags:
       - Auth
+  /message:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: msg params
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddMessage'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: create message
+      tags:
+      - Message
   /register:
     post:
       consumes:

@@ -3,13 +3,9 @@ package webapi
 import (
 	"Messenger/internal/resolver"
 	_ "Messenger/webapi/docs"
-	"Messenger/webapi/globals"
 	"Messenger/webapi/handlers"
 	"fmt"
-	session "github.com/ScottHuangZL/gin-jwt-session"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
@@ -32,16 +28,11 @@ func Run(database *gorm.DB) error {
 
 	//gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	session.NewStore()
-	cookieStore := cookie.NewStore(globals.Secret)
-	cookieStore.Options(sessions.Options{HttpOnly: false, Secure: false, MaxAge: 86400, Path: "/", Domain: "localhost"})
-	router.Use(session.ClearMiddleware()) //important to avoid mem leak
-	router.Use(sessions.Sessions("token", cookieStore))
 	router.Use(gin.Recovery())
 	router.Use(gin.Logger())
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://192.168.2.109:3000", "http://192.168.1.44:8080", "http://localhost:3000"},
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowOrigins:     []string{"http://192.168.1.44:8080", "http://localhost:3000", "http://192.168.1.1:8080"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Access-Control-Allow-Headers", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Access-Control-Allow-Credentials", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           24 * time.Hour,
@@ -60,7 +51,13 @@ func Run(database *gorm.DB) error {
 
 	router.GET("/chats", h.GetAllChatsHandler())
 	router.POST("/chat", h.CreateChatHandler())
-	router.GET("/chat/:id", h.WSChatHandler())
+	router.PATCH("/chat", h.CreateChatHandler())
+	router.POST("/chat/:id", h.WSChatHandler())
+
+	router.POST("/message", h.CreateMessageHandler())
+	router.PATCH("/message", h.EditMessageHandler())
+	router.DELETE("/message", h.DeleteMessageHandler())
+	router.GET("/message/:offset", h.GetMessagesBatchHandler())
 
 	err := router.Run(address)
 	if err != nil {

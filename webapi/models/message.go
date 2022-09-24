@@ -6,3 +6,9 @@ type Message struct {
 	EditedAt  string
 	User      string
 }
+
+type AddMessage struct {
+	Text   string
+	ChatId uint32
+	User   string
+}
