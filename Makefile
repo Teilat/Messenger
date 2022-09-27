@@ -11,14 +11,24 @@ ifeq ($(shell go env GOHOSTOS), windows)
 	ABS_PATH = $(PWD)
 endif
 
-.PHONY: all build windows linux vendor gen-webapi clean
+.PHONY: all build windows linux vendor gen-webapi gen-ssl clean
 
 all: build
 
 build: windows linux ## Default: build for windows and linux
 
-gen-swagger: vendor
+gen-swagger:
 	cd ./webapi && swag init --parseDependency --parseInternal -g webapi.go
+
+gen-cert:
+	rm -rf *.pem
+	mkcert -key-file server-key.pem -cert-file server-cert.pem 192.168.1.44 0.0.0.0
+
+gen-ssl:
+	rm -rf *.pem
+	openssl req -x509 -newkey rsa:4096 -days 365 -keyout ca-key.pem -out ca-cert.pem -subj "/C=RU/ST=Vologda/L=Vologda/O=Default Company Ltd/CN=192.168.1.44"
+	openssl req -newkey rsa:4096 -keyout server-key.pem -out server-req.pem -subj "/C=RU/ST=Vologda/L=Vologda/O=Default Company Ltd/CN=192.168.1.44"
+	openssl x509 -req -in server-req.pem -days 365 -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
 
 windows: vendor $(BUILD_FOLDER)/windows/logconfig.json ## Build artifacts for windows
 	@printf $(PRINTF_FORMAT) BINARY_NAME: $(WIN_BINARY_NAME)

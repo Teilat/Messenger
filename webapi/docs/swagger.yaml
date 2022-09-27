@@ -9,15 +9,6 @@ definitions:
           type: string
         type: array
     type: object
-  models.AddMessage:
-    properties:
-      chatId:
-        type: integer
-      text:
-        type: string
-      user:
-        type: string
-    type: object
   models.AddUser:
     properties:
       login:
@@ -45,6 +36,29 @@ definitions:
       name:
         example: Super Chat
         type: string
+      users:
+        items:
+          type: string
+        type: array
+    type: object
+  models.DeleteMessage:
+    properties:
+      messageId:
+        type: integer
+    type: object
+  models.EditMessage:
+    properties:
+      messageId:
+        type: integer
+      text:
+        type: string
+    type: object
+  models.GetMessages:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
     type: object
   models.Login:
     properties:
@@ -61,8 +75,47 @@ definitions:
         type: string
       text:
         type: string
-      user:
+      userId:
         type: string
+    type: object
+  models.MessageType:
+    properties:
+      action:
+        type: string
+      payload:
+        additionalProperties: true
+        type: object
+    type: object
+  models.ReplyMessage:
+    properties:
+      message:
+        $ref: '#/definitions/models.SendMessage'
+      replyMessageId:
+        type: integer
+    type: object
+  models.SendMessage:
+    properties:
+      text:
+        type: string
+    type: object
+  models.TestChat:
+    properties:
+      createdAt:
+        example: "1662070156"
+        type: string
+      id:
+        type: integer
+      messages:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
+      name:
+        example: Super Chat
+        type: string
+      users:
+        items:
+          type: string
+        type: array
     type: object
   models.User:
     properties:
@@ -89,7 +142,22 @@ definitions:
         example: "+78005553535"
         type: string
     type: object
-  models.WSChat:
+  models.WSChatIn:
+    properties:
+      deleteMessage:
+        $ref: '#/definitions/models.DeleteMessage'
+      editMessage:
+        $ref: '#/definitions/models.EditMessage'
+      getMessages:
+        $ref: '#/definitions/models.GetMessages'
+      messageType:
+        $ref: '#/definitions/models.MessageType'
+      replyMessage:
+        $ref: '#/definitions/models.ReplyMessage'
+      sendMessage:
+        $ref: '#/definitions/models.SendMessage'
+    type: object
+  models.WSChatOut:
     properties:
       newMessages:
         items:
@@ -116,6 +184,19 @@ paths:
       tags:
       - General
   /chat:
+    get:
+      consumes:
+      - application/json
+      responses:
+        "200":
+          description: list of chats for current user
+          schema:
+            items:
+              $ref: '#/definitions/models.TestChat'
+            type: array
+      summary: get chats with messages
+      tags:
+      - Chat
     post:
       consumes:
       - application/json
@@ -137,16 +218,22 @@ paths:
       tags:
       - Chat
   /chat/:id:
-    post:
+    get:
       consumes:
       - application/json
+      parameters:
+      - description: ws struct
+        in: body
+        name: struct
+        schema:
+          $ref: '#/definitions/models.WSChatIn'
       produces:
       - application/json
       responses:
         "101":
           description: ws struct
           schema:
-            $ref: '#/definitions/models.WSChat'
+            $ref: '#/definitions/models.WSChatOut'
       summary: upgrade request to ws
       tags:
       - Chat
@@ -199,25 +286,6 @@ paths:
       summary: Logout user
       tags:
       - Auth
-  /message:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: msg params
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/models.AddMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: create message
-      tags:
-      - Message
   /register:
     post:
       consumes:
@@ -240,6 +308,6 @@ paths:
 securityDefinitions:
   BearerAuth:
     in: header
-    name: token
+    name: Authorization
     type: apiKey
 swagger: "2.0"

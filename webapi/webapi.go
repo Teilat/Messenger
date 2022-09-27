@@ -2,14 +2,13 @@ package webapi
 
 import (
 	"Messenger/internal/resolver"
+	"Messenger/webapi/converters"
 	_ "Messenger/webapi/docs"
-	"Messenger/webapi/globals"
 	"Messenger/webapi/handlers"
+	"Messenger/webapi/models"
 	"fmt"
-	session "github.com/ScottHuangZL/gin-jwt-session"
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
@@ -24,51 +23,111 @@ import (
 // @Version   1.0
 // @securityDefinitions.apikey BearerAuth
 // @in header
-// @name token
+// @name Authorization
 
 func Run(database *gorm.DB) error {
 	// swag init --parseDependency --parseInternal -g webapi.go
 	address := fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port"))
 
+	logger := log.New(os.Stderr, "Handler: ", log.LstdFlags)
+	res := resolver.Init(database, logger)
+	hub := resolver.NewHub()
+	go hub.Run()
+	h := handlers.Init(logger, res, hub)
+
 	//gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	session.NewStore()
-	cookieStore := cookie.NewStore(globals.Secret)
-	cookieStore.Options(sessions.Options{HttpOnly: false, Secure: false, MaxAge: 86400, Path: "/", Domain: "localhost"})
-	router.Use(session.ClearMiddleware()) //important to avoid mem leak
-	router.Use(sessions.Sessions("token", cookieStore))
+	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
+		SendCookie:  false,
+		CookieName:  "jwt",
+		TokenLookup: "header: Authorization, query: token, cookie: jwt",
+		TimeFunc:    time.Now,
+		Key:         []byte("secret key"),
+		Timeout:     time.Hour,
+		MaxRefresh:  time.Hour,
+		// --------------------
+		Authenticator: func(c *gin.Context) (interface{}, error) {
+			var loginVals models.Login
+			if err := c.ShouldBind(&loginVals); err != nil {
+				return "", jwt.ErrMissingLoginValues
+			}
+			return &models.Login{
+				Username: loginVals.Username,
+			}, nil
+		},
+		PayloadFunc: func(data interface{}) jwt.MapClaims { // структура внутри jwt
+			if v, ok := data.(*models.Login); ok {
+				h.LoginUser = v.Username
+				return jwt.MapClaims{
+					jwt.IdentityKey: v.Username,
+				}
+			}
+			return jwt.MapClaims{}
+		},
+		LoginResponse: func(c *gin.Context, code int, message string, time time.Time) {
+			c.Writer.Header().Add("Access-Token", message)
+			c.Writer.Header().Add("Expire-Token", time.Format("2006-01-02 15:04:05"))
+			c.JSON(code, converters.UserToApiUser(h.Resolver.GetUserByUsername(h.LoginUser), h.Resolver.GetUserChats(h.LoginUser)))
+		},
+		//----------------------
+		IdentityHandler: func(c *gin.Context) interface{} {
+			claims := jwt.ExtractClaims(c)
+			return &models.Login{
+				Username: claims[jwt.IdentityKey].(string),
+			}
+		},
+		Authorizator: func(data interface{}, c *gin.Context) bool {
+			return true
+		},
+		Unauthorized: func(c *gin.Context, code int, message string) {
+			c.JSON(code, gin.H{
+				"code":    code,
+				"message": message,
+			})
+		},
+
+		LogoutResponse: func(c *gin.Context, code int) {
+			c.JSON(code, "")
+		},
+	})
+	if err != nil {
+		log.Fatal("JWT Error:" + err.Error())
+	}
+	// When you use jwt.New(), the function is already automatically called for checking,
+	// which means you don't need to call it again.
+	errInit := authMiddleware.MiddlewareInit()
+	if errInit != nil {
+		log.Fatal("authMiddleware.MiddlewareInit() Error:" + errInit.Error())
+	}
 	router.Use(gin.Recovery())
 	router.Use(gin.Logger())
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://192.168.1.44:8080", "http://localhost:3000", "http://192.168.1.1:8080"},
+		ExposeHeaders:    []string{"Access-Token", "Expire-Token"},
+		AllowOrigins:     []string{"http://192.168.1.44:8080", "http://192.168.1.134:3000", "http://localhost:3000", "http://192.168.1.1:3000"},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PATCH", "DELETE"},
-		AllowHeaders:     []string{"Access-Control-Allow-Headers", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Access-Control-Allow-Credentials", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type"},
+		AllowHeaders:     []string{"jwt", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Access-Control-Allow-Credentials", "Authorization", "Origin", "Accept", "X-Requested-With", "Content-Type"},
 		AllowCredentials: true,
 		MaxAge:           24 * time.Hour,
 		AllowWebSockets:  true,
 	}))
-	logger := log.New(os.Stderr, "Handler: ", log.LstdFlags)
-	res := resolver.Init(database, logger)
-	h := handlers.Init(logger, res)
+
+	authGroup := router.Group("")
+	authGroup.Use(authMiddleware.MiddlewareFunc())
 
 	router.GET("/", h.HandlePing())
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.GET("/swagger", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.POST("/login", h.LoginPostHandler())
+	router.POST("/login", authMiddleware.LoginHandler)
 	router.POST("/register", h.RegisterHandler())
-	router.GET("/logout", h.LogoutGetHandler())
+	authGroup.GET("/logout", authMiddleware.LogoutHandler)
+	authGroup.GET("/user/:username", h.GetUser())
 
-	router.GET("/chats", h.GetAllChatsHandler())
-	router.POST("/chat", h.CreateChatHandler())
-	router.PATCH("/chat", h.CreateChatHandler())
-	router.POST("/chat/:id", h.WSChatHandler())
+	authGroup.GET("/chats", h.GetAllChatsHandler())
+	authGroup.POST("/chat", h.CreateChatHandler())
+	authGroup.GET("/chat/:id", h.WSChatHandler())
 
-	router.POST("/message", h.CreateMessageHandler())
-	router.PATCH("/message", h.EditMessageHandler())
-	router.DELETE("/message", h.DeleteMessageHandler())
-	router.GET("/message/:offset", h.GetMessagesBatchHandler())
-
-	err := router.Run(address)
+	err = router.Run(address)
+	//err := router.RunTLS(address, "./server-cert.pem", "./server-key.pem")
 	if err != nil {
 		log.Fatal(err)
 	}

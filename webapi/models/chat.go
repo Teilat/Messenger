@@ -18,6 +18,15 @@ type AddUserToChat struct {
 	UserId string `json:"userId" example:"Admin"`
 }
 
-type WSChat struct {
+type WSChatOut struct {
 	NewMessages []Message
+}
+
+type WSChatIn struct {
+	MessageType   MessageType   `json:"messageType" description:"sendMessage,editMessage,deleteMessage,replyMessage,getMessages"`
+	SendMessage   SendMessage   `json:"sendMessage"`
+	EditMessage   EditMessage   `json:"editMessage"`
+	DeleteMessage DeleteMessage `json:"deleteMessage"`
+	ReplyMessage  ReplyMessage  `json:"replyMessage"`
+	GetMessages   GetMessages   `json:"getMessages"`
 }

@@ -39,6 +39,26 @@ const docTemplate_swagger = `{
             }
         },
         "/chat": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "get chats with messages",
+                "responses": {
+                    "200": {
+                        "description": "list of chats for current user",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.TestChat"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -72,7 +92,7 @@ const docTemplate_swagger = `{
             }
         },
         "/chat/:id": {
-            "post": {
+            "get": {
                 "consumes": [
                     "application/json"
                 ],
@@ -83,11 +103,21 @@ const docTemplate_swagger = `{
                     "Chat"
                 ],
                 "summary": "upgrade request to ws",
+                "parameters": [
+                    {
+                        "description": "ws struct",
+                        "name": "struct",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/models.WSChatIn"
+                        }
+                    }
+                ],
                 "responses": {
                     "101": {
                         "description": "ws struct",
                         "schema": {
-                            "$ref": "#/definitions/models.WSChat"
+                            "$ref": "#/definitions/models.WSChatOut"
                         }
                     }
                 }
@@ -170,36 +200,6 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/message": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Message"
-                ],
-                "summary": "create message",
-                "parameters": [
-                    {
-                        "description": "msg params",
-                        "name": "message",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.AddMessage"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/register": {
             "post": {
                 "consumes": [
@@ -247,20 +247,6 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "models.AddMessage": {
-            "type": "object",
-            "properties": {
-                "chatId": {
-                    "type": "integer"
-                },
-                "text": {
-                    "type": "string"
-                },
-                "user": {
-                    "type": "string"
-                }
-            }
-        },
         "models.AddUser": {
             "type": "object",
             "properties": {
@@ -298,6 +284,42 @@ const docTemplate_swagger = `{
                 "name": {
                     "type": "string",
                     "example": "Super Chat"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "models.DeleteMessage": {
+            "type": "object",
+            "properties": {
+                "messageId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.EditMessage": {
+            "type": "object",
+            "properties": {
+                "messageId": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.GetMessages": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
                 }
             }
         },
@@ -324,8 +346,67 @@ const docTemplate_swagger = `{
                 "text": {
                     "type": "string"
                 },
-                "user": {
+                "userId": {
                     "type": "string"
+                }
+            }
+        },
+        "models.MessageType": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "payload": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "models.ReplyMessage": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "$ref": "#/definitions/models.SendMessage"
+                },
+                "replyMessageId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.SendMessage": {
+            "type": "object",
+            "properties": {
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.TestChat": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string",
+                    "example": "1662070156"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Message"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Super Chat"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -364,7 +445,30 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "models.WSChat": {
+        "models.WSChatIn": {
+            "type": "object",
+            "properties": {
+                "deleteMessage": {
+                    "$ref": "#/definitions/models.DeleteMessage"
+                },
+                "editMessage": {
+                    "$ref": "#/definitions/models.EditMessage"
+                },
+                "getMessages": {
+                    "$ref": "#/definitions/models.GetMessages"
+                },
+                "messageType": {
+                    "$ref": "#/definitions/models.MessageType"
+                },
+                "replyMessage": {
+                    "$ref": "#/definitions/models.ReplyMessage"
+                },
+                "sendMessage": {
+                    "$ref": "#/definitions/models.SendMessage"
+                }
+            }
+        },
+        "models.WSChatOut": {
             "type": "object",
             "properties": {
                 "newMessages": {
@@ -379,7 +483,7 @@ const docTemplate_swagger = `{
     "securityDefinitions": {
         "BearerAuth": {
             "type": "apiKey",
-            "name": "token",
+            "name": "Authorization",
             "in": "header"
         }
     }

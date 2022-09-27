@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 func InitPostgresql() (*gorm.DB, error) {
@@ -19,7 +18,7 @@ func InitPostgresql() (*gorm.DB, error) {
 		viper.Get("postgresql.db"))
 
 	// connecting
-	db, err := gorm.Open(postgres.Open(connString), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	db, err := gorm.Open(postgres.Open(connString), &gorm.Config{})
 	if err != nil {
 		return nil, errors.New("error while connecting to database:" + err.Error())
 	}

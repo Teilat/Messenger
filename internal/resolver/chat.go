@@ -3,23 +3,9 @@ package resolver
 import (
 	"Messenger/database"
 	"Messenger/webapi/models"
-	"fmt"
-	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 	"time"
 )
-
-func (r Resolver) ChatWS(ws *websocket.Conn, chatId string) {
-
-	for {
-		ws.ReadMessage()
-		err := ws.WriteJSON("dfg")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-	}
-}
 
 func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
 	res := r.Db.Create(&database.Chat{
@@ -40,6 +26,7 @@ func (r Resolver) GetUserChats(userId string) []*database.Chat {
 	var res []*database.Chat
 	r.Db.
 		Preload("Users").
+		Preload("Messages").
 		Find(&chats)
 
 	// TODO сделать фильтауию через запрос
@@ -50,12 +37,11 @@ func (r Resolver) GetUserChats(userId string) []*database.Chat {
 			}
 		}
 	}
-	fmt.Println("find: ", len(res))
-	return chats
+	return res
 }
 
 func makeUsersForChat(db *gorm.DB, usernames []string) []*database.User {
-	res := make([]*database.User, 0)
-	db.Where("username IN ?", usernames).Find(&res)
-	return res
+	user := make([]*database.User, 0)
+	db.Preload("Chats").Where("username IN ?", usernames).Find(&user)
+	return user
 }

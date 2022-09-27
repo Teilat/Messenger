@@ -3,7 +3,6 @@ package converters
 import (
 	"Messenger/database"
 	"Messenger/webapi/models"
-	"sort"
 )
 
 const DefaultTimeFormat = "15:04"
@@ -20,27 +19,10 @@ func UserToApiUser(user *database.User, chats []*database.Chat) models.User {
 	}
 }
 
-func chatsToApiUserChats(chats []*database.Chat) []models.Chat {
-	var res []models.Chat
-	sort.Slice(chats, func(i, j int) bool {
-		return chats[i].CreatedAt.Before(chats[j].CreatedAt)
-	})
-
-	for i, chat := range chats {
-		sort.Slice(chat.Messages, func(i, j int) bool {
-			return chat.Messages[i].CreatedAt.After(chat.Messages[j].CreatedAt)
-		})
-
-		res = append(res, models.Chat{
-			Id:        uint32(i),
-			Name:      chat.Name,
-			CreatedAt: chat.CreatedAt.Format(DefaultTimeFormat),
-			LastMessage: models.Message{
-				Text:      chat.Messages[0].Text,
-				CreatedAt: chat.Messages[0].CreatedAt.Format(DefaultTimeFormat),
-				User:      "Admin",
-			},
-		})
+func chatUsersToApiChatUsers(users []*database.User) []string {
+	var res []string
+	for _, user := range users {
+		res = append(res, user.Username)
 	}
 	return res
 }
