@@ -4,6 +4,7 @@ import (
 	"Messenger/database"
 	"Messenger/webapi/models"
 	"gorm.io/gorm"
+	"sort"
 	"time"
 )
 
@@ -36,6 +37,14 @@ func (r Resolver) GetUserChats(userId string) []*database.Chat {
 				res = append(res, chat)
 			}
 		}
+	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].CreatedAt.Before(res[j].CreatedAt)
+	})
+	for _, re := range res {
+		sort.Slice(re.Messages, func(i, j int) bool {
+			return re.Messages[i].CreatedAt.Before(re.Messages[j].CreatedAt)
+		})
 	}
 	return res
 }

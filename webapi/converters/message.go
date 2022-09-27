@@ -8,13 +8,13 @@ import (
 func MessagesToWsMessages(msg []database.Message) []models.Message {
 	res := []models.Message{}
 
-	for _, message := range msg {
+	for i, message := range msg {
 		res = append(res, models.Message{
+			Id:        uint32(i),
 			Text:      message.Text,
 			CreatedAt: message.CreatedAt.Format(DefaultTimeFormat),
 			UserId:    message.Username,
 		})
 	}
-
 	return res
 }

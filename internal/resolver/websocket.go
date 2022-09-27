@@ -4,9 +4,7 @@ import (
 	"Messenger/webapi/converters"
 	"Messenger/webapi/models"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
-	"log"
 	"time"
 )
 
@@ -98,74 +96,75 @@ func (c *Client) readPump() {
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		_, message, err := c.conn.ReadMessage()
+		msgType, message, err := c.conn.ReadMessage()
+		if msgType == -1 {
+			continue
+		}
 		var dat models.MessageType
 		err = json.Unmarshal(message, &dat)
 		if err != nil {
-			fmt.Println(err)
+			c.resolver.Log.Println(err)
 		}
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				c.resolver.Log.Printf("error: %v", err)
 			}
 			break
 		}
 		message = []byte{}
+
+		if dat.Payload == nil {
+			c.resolver.Log.Printf("userId=%s, chatId=%s, Payload empty, message=%s", c.userId, c.chatId, message)
+			break
+		}
 
 		switch dat.Action {
 		case "sendMessage":
 			err = c.resolver.CreateWsMessage(models.SendMessage{Text: dat.Payload["text"].(string)}, c.chatId, c.userId)
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("error: %v", err)
+					c.resolver.Log.Printf("error: %v", err)
 				}
 				break
 			}
 			message = []byte(dat.Payload["text"].(string))
 		case "editMessage":
-			payload := models.EditMessage{NewText: dat.Payload["text"].(string), MessageId: dat.Payload["messageId"].(uint32)}
-			fmt.Println(payload)
-			//err := c.resolver.CreateWsMessage(payload, c.chatId, c.userId)
+			err := c.resolver.EditWsMessage(models.EditMessage{NewText: dat.Payload["text"].(string), MessageId: uint32(dat.Payload["messageId"].(float64))}, c.chatId, c.userId)
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("error: %v", err)
+					c.resolver.Log.Printf("error: %v", err)
 				}
 				break
 			}
 		case "deleteMessage":
-			payload := models.DeleteMessage{MessageId: dat.Payload["messageId"].(uint32)}
-			fmt.Println(payload)
-			//err := c.resolver.CreateWsMessage(payload, c.chatId, c.userId)
+			err := c.resolver.DeleteWsMessage(models.DeleteMessage{MessageId: uint32(dat.Payload["messageId"].(float64))}, c.chatId, c.userId)
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("error: %v", err)
+					c.resolver.Log.Printf("error: %v", err)
 				}
 				break
 			}
 		case "replyMessage":
-			payload := dat.Payload
-			fmt.Println(payload)
-			//err := c.resolver.CreateWsMessage(payload, c.chatId, c.userId)
+			err := c.resolver.ReplyWsMessage(models.ReplyMessage{ReplyMessageId: uint32(dat.Payload["replyMessageId"].(float64)), Message: models.SendMessage{Text: dat.Payload["text"].(string)}}, c.chatId, c.userId)
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("error: %v", err)
+					c.resolver.Log.Printf("error: %v", err)
 				}
 				break
 			}
 		case "getMessages":
 			payload := models.GetMessages{Limit: int(dat.Payload["limit"].(float64)), Offset: int(dat.Payload["offset"].(float64))}
-			fmt.Println(payload)
 			messages, err := c.resolver.GetWsMessages(payload, c.chatId, c.userId)
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("error: %v", err)
+					c.resolver.Log.Printf("error: %v", err)
 				}
 				break
 			}
 			err = c.conn.WriteJSON(converters.MessagesToWsMessages(messages))
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					log.Printf("error: %v", err)
+					c.resolver.Log.Printf("error: %v", err)
 				}
 				break
 			}

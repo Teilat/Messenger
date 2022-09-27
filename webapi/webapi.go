@@ -5,6 +5,7 @@ import (
 	"Messenger/webapi/converters"
 	_ "Messenger/webapi/docs"
 	"Messenger/webapi/handlers"
+	"Messenger/webapi/helpers"
 	"Messenger/webapi/models"
 	"fmt"
 	jwt "github.com/appleboy/gin-jwt/v2"
@@ -29,7 +30,7 @@ func Run(database *gorm.DB) error {
 	// swag init --parseDependency --parseInternal -g webapi.go
 	address := fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port"))
 
-	logger := log.New(os.Stderr, "Handler: ", log.LstdFlags)
+	logger := log.New(os.Stderr, "[Handler] ", log.LstdFlags)
 	res := resolver.Init(database, logger)
 	hub := resolver.NewHub()
 	go hub.Run()
@@ -50,6 +51,9 @@ func Run(database *gorm.DB) error {
 			var loginVals models.Login
 			if err := c.ShouldBind(&loginVals); err != nil {
 				return "", jwt.ErrMissingLoginValues
+			}
+			if !helpers.CheckUserPass(h.Resolver.Db, loginVals) {
+				return "", jwt.ErrFailedAuthentication
 			}
 			return &models.Login{
 				Username: loginVals.Username,

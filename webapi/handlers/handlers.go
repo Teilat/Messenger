@@ -178,5 +178,8 @@ func (h Handlers) UpdateChatHandler() gin.HandlerFunc {
 
 func (h Handlers) GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		//claims := jwt.ExtractClaims(c)
+		//var id = c.Param("username")
+
 	}
 }
