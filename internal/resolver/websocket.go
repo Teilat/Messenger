@@ -97,7 +97,8 @@ func (c *Client) readPump() {
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
 		msgType, message, err := c.conn.ReadMessage()
-		if msgType == -1 {
+		if err != nil || (msgType == websocket.CloseGoingAway || msgType == -1) {
+			c.resolver.Log.Println(err)
 			continue
 		}
 		var dat models.MessageType
