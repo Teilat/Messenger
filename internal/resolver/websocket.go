@@ -96,26 +96,24 @@ func (c *Client) readPump() {
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		msgType, message, err := c.conn.ReadMessage()
-		if err != nil || (msgType == websocket.CloseGoingAway || msgType == -1) {
-			c.resolver.Log.Println(err)
-			continue
-		}
-		var dat models.MessageType
-		err = json.Unmarshal(message, &dat)
-		if err != nil {
-			c.resolver.Log.Println(err)
-		}
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				c.resolver.Log.Printf("error: %v", err)
+		_, message, wsErr := c.conn.ReadMessage()
+		if wsErr != nil {
+			if websocket.IsUnexpectedCloseError(wsErr, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				c.resolver.Log.Printf("error: %v", wsErr)
 			}
 			break
 		}
-		message = []byte{}
+
+		var dat models.MessageType
+		err := json.Unmarshal(message, &dat)
+		if err != nil {
+			c.resolver.Log.Printf("error: %v", err)
+		} else {
+			message = []byte{}
+		}
 
 		if dat.Payload == nil {
-			c.resolver.Log.Printf("userId=%s, chatId=%s, Payload empty, message=%s", c.userId, c.chatId, message)
+			c.resolver.Log.Printf("userId=%s, chatId=%s, Payload empty, message=%s, wsErr=%s", c.userId, c.chatId, message, wsErr.Error())
 			break
 		}
 
@@ -123,50 +121,38 @@ func (c *Client) readPump() {
 		case "sendMessage":
 			err = c.resolver.CreateWsMessage(models.SendMessage{Text: dat.Payload["text"].(string)}, c.chatId, c.userId)
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					c.resolver.Log.Printf("error: %v", err)
-				}
+				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
 			message = []byte(dat.Payload["text"].(string))
 		case "editMessage":
 			err := c.resolver.EditWsMessage(models.EditMessage{NewText: dat.Payload["text"].(string), MessageId: uint32(dat.Payload["messageId"].(float64))}, c.chatId, c.userId)
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					c.resolver.Log.Printf("error: %v", err)
-				}
+				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
 		case "deleteMessage":
 			err := c.resolver.DeleteWsMessage(models.DeleteMessage{MessageId: uint32(dat.Payload["messageId"].(float64))}, c.chatId, c.userId)
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					c.resolver.Log.Printf("error: %v", err)
-				}
+				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
 		case "replyMessage":
-			err := c.resolver.ReplyWsMessage(models.ReplyMessage{ReplyMessageId: uint32(dat.Payload["replyMessageId"].(float64)), Message: models.SendMessage{Text: dat.Payload["text"].(string)}}, c.chatId, c.userId)
+			err := c.resolver.ReplyWsMessage(models.ReplyMessage{ReplyMessageId: uint32(dat.Payload["replyMessageId"].(float64)), Text: dat.Payload["text"].(string)}, c.chatId, c.userId)
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					c.resolver.Log.Printf("error: %v", err)
-				}
+				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
 		case "getMessages":
 			payload := models.GetMessages{Limit: int(dat.Payload["limit"].(float64)), Offset: int(dat.Payload["offset"].(float64))}
 			messages, err := c.resolver.GetWsMessages(payload, c.chatId, c.userId)
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					c.resolver.Log.Printf("error: %v", err)
-				}
+				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
 			err = c.conn.WriteJSON(converters.MessagesToWsMessages(messages))
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					c.resolver.Log.Printf("error: %v", err)
-				}
+				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
 		default:

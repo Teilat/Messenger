@@ -19,8 +19,8 @@ type DeleteMessage struct {
 }
 
 type ReplyMessage struct {
-	ReplyMessageId uint32      `json:"replyMessageId"`
-	Message        SendMessage `json:"message"`
+	ReplyMessageId uint32 `json:"replyMessageId"`
+	Text           string `json:"text"`
 }
 type GetMessages struct {
 	Limit  int `json:"limit"`

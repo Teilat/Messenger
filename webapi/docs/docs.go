@@ -39,26 +39,6 @@ const docTemplate_swagger = `{
             }
         },
         "/chat": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chat"
-                ],
-                "summary": "get chats with messages",
-                "responses": {
-                    "200": {
-                        "description": "list of chats for current user",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.TestChat"
-                            }
-                        }
-                    }
-                }
-            },
             "post": {
                 "consumes": [
                     "application/json"
@@ -343,6 +323,9 @@ const docTemplate_swagger = `{
                 "editedAt": {
                     "type": "string"
                 },
+                "id": {
+                    "type": "integer"
+                },
                 "text": {
                     "type": "string"
                 },
@@ -366,11 +349,11 @@ const docTemplate_swagger = `{
         "models.ReplyMessage": {
             "type": "object",
             "properties": {
-                "message": {
-                    "$ref": "#/definitions/models.SendMessage"
-                },
                 "replyMessageId": {
                     "type": "integer"
+                },
+                "text": {
+                    "type": "string"
                 }
             }
         },
@@ -379,34 +362,6 @@ const docTemplate_swagger = `{
             "properties": {
                 "text": {
                     "type": "string"
-                }
-            }
-        },
-        "models.TestChat": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string",
-                    "example": "1662070156"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "messages": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Message"
-                    }
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Super Chat"
-                },
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
