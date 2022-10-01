@@ -39,7 +39,7 @@ func Run(database *gorm.DB) error {
 	//gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
-		SendCookie:  false,
+		SendCookie:  true,
 		CookieName:  "jwt",
 		TokenLookup: "header: Authorization, query: token, cookie: jwt",
 		TimeFunc:    time.Now,
@@ -71,7 +71,7 @@ func Run(database *gorm.DB) error {
 		LoginResponse: func(c *gin.Context, code int, message string, time time.Time) {
 			c.Writer.Header().Add("Access-Token", message)
 			c.Writer.Header().Add("Expire-Token", time.Format("2006-01-02 15:04:05"))
-			c.JSON(code, converters.UserToApiUser(h.Resolver.GetUserByUsername(h.LoginUser), h.Resolver.GetUserChats(h.LoginUser)))
+			c.JSON(code, converters.UserToApiUser(h.Resolver.GetUserByUsername(h.LoginUser)))
 		},
 		//----------------------
 		IdentityHandler: func(c *gin.Context) interface{} {

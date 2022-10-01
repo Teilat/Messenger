@@ -7,7 +7,7 @@ import (
 
 const DefaultTimeFormat = "15:04"
 
-func UserToApiUser(user *database.User, chats []*database.Chat) models.User {
+func UserToApiUser(user *database.User) models.User {
 	return models.User{
 		Username:   user.Username,
 		Nickname:   user.Name,
@@ -15,7 +15,6 @@ func UserToApiUser(user *database.User, chats []*database.Chat) models.User {
 		Phone:      user.Phone,
 		CreatedAt:  user.CreatedAt.Format(DefaultTimeFormat),
 		LastOnline: user.LastOnline.Format(DefaultTimeFormat),
-		Chats:      chatsToApiUserChats(chats),
 	}
 }
 

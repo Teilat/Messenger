@@ -7,7 +7,6 @@ type User struct {
 	Phone      string `json:"phone" example:"+78005553535"`
 	CreatedAt  string `json:"createdAt" example:"1662070156" description:"unix time"`
 	LastOnline string `json:"lastOnline" example:"1662070156" description:"unix time"`
-	Chats      []Chat `json:"chats"`
 }
 
 type UserCredentials struct {

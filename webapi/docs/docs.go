@@ -209,6 +209,37 @@ const docTemplate_swagger = `{
                     }
                 }
             }
+        },
+        "/user/:username": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "get user by username",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "username",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -258,8 +289,11 @@ const docTemplate_swagger = `{
                 "id": {
                     "type": "integer"
                 },
-                "lastMessage": {
-                    "$ref": "#/definitions/models.Message"
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Message"
+                    }
                 },
                 "name": {
                     "type": "string",
@@ -371,12 +405,6 @@ const docTemplate_swagger = `{
                 "bio": {
                     "type": "string",
                     "example": "What are you taking about?"
-                },
-                "chats": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Chat"
-                    }
                 },
                 "createdAt": {
                     "type": "string",

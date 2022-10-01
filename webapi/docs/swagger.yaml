@@ -31,8 +31,10 @@ definitions:
         type: string
       id:
         type: integer
-      lastMessage:
-        $ref: '#/definitions/models.Message'
+      messages:
+        items:
+          $ref: '#/definitions/models.Message'
+        type: array
       name:
         example: Super Chat
         type: string
@@ -105,10 +107,6 @@ definitions:
       bio:
         example: What are you taking about?
         type: string
-      chats:
-        items:
-          $ref: '#/definitions/models.Chat'
-        type: array
       createdAt:
         example: "1662070156"
         type: string
@@ -275,6 +273,26 @@ paths:
       summary: register user
       tags:
       - Auth
+  /user/:username:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: username
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: get user by username
+      tags:
+      - User
 securityDefinitions:
   BearerAuth:
     in: header

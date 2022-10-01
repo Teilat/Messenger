@@ -73,7 +73,6 @@ func (h Handlers) LoginPostHandler() gin.HandlerFunc {
 // @Router      /logout [get]
 func (h Handlers) LogoutGetHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log.Println("logging out user:")
 	}
 }
 
@@ -128,7 +127,7 @@ func (h Handlers) WSChatHandler() gin.HandlerFunc {
 }
 
 // GetAllChatsHandler  godoc
-// @Summary     get all chats
+// @Summary     Get all chats
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
@@ -176,10 +175,17 @@ func (h Handlers) UpdateChatHandler() gin.HandlerFunc {
 	}
 }
 
+// GetUser  godoc
+// @Summary     get user by username
+// @Tags        User
+// @Accept      json
+// @Produce     json
+// @Param       username path string true "username"
+// @Success     200 {object} models.User
+// @Error       500 {string} string
+// @Router      /user/:username [get]
 func (h Handlers) GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//claims := jwt.ExtractClaims(c)
-		//var id = c.Param("username")
-
+		c.JSON(http.StatusOK, converters.UserToApiUser(h.Resolver.GetUserByUsername(c.Param("username"))))
 	}
 }
