@@ -28,12 +28,14 @@ type Chat struct {
 }
 
 type Message struct {
-	Id         uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Text       string
-	CreatedAt  time.Time `gorm:"default:(now() at time zone 'msk')"`
-	EditedAt   time.Time
-	DeletedAt  time.Time
-	ResponseId *uuid.UUID `gorm:"foreignKey:Id"`
-	Username   string     // one to many username
-	ChatId     uuid.UUID  // one to many chat id
+	Id            uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	IntId         uint32
+	Text          string
+	CreatedAt     time.Time `gorm:"default:(now() at time zone 'msk')"`
+	EditedAt      time.Time
+	DeletedAt     time.Time
+	DeletedForAll bool
+	ResponseId    *uint32   `gorm:"foreignKey:IntId"`
+	Username      string    // one to many username
+	ChatId        uuid.UUID // one to many chat id
 }
