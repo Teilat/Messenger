@@ -71,7 +71,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/chat/:id": {
+        "/chat/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -89,16 +89,13 @@ const docTemplate_swagger = `{
                         "name": "struct",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/models.WSChatIn"
+                            "$ref": "#/definitions/models.WsMessage"
                         }
                     }
                 ],
                 "responses": {
                     "101": {
-                        "description": "ws struct",
-                        "schema": {
-                            "$ref": "#/definitions/models.WSChatOut"
-                        }
+                        "description": ""
                     }
                 }
             }
@@ -114,7 +111,7 @@ const docTemplate_swagger = `{
                 "tags": [
                     "Chat"
                 ],
-                "summary": "get all chats",
+                "summary": "Get all chats",
                 "responses": {
                     "200": {
                         "description": "list of chats for current user",
@@ -210,7 +207,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/user/:username": {
+        "/user/{username}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -360,23 +357,14 @@ const docTemplate_swagger = `{
                 "id": {
                     "type": "integer"
                 },
+                "responseId": {
+                    "type": "integer"
+                },
                 "text": {
                     "type": "string"
                 },
                 "userId": {
                     "type": "string"
-                }
-            }
-        },
-        "models.MessageType": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string"
-                },
-                "payload": {
-                    "type": "object",
-                    "additionalProperties": true
                 }
             }
         },
@@ -428,36 +416,30 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "models.WSChatIn": {
+        "models.WsMessage": {
             "type": "object",
             "properties": {
-                "deleteMessage": {
-                    "$ref": "#/definitions/models.DeleteMessage"
+                "action": {
+                    "type": "string"
                 },
-                "editMessage": {
-                    "$ref": "#/definitions/models.EditMessage"
-                },
-                "getMessages": {
-                    "$ref": "#/definitions/models.GetMessages"
-                },
-                "messageType": {
-                    "$ref": "#/definitions/models.MessageType"
-                },
-                "replyMessage": {
-                    "$ref": "#/definitions/models.ReplyMessage"
-                },
-                "sendMessage": {
-                    "$ref": "#/definitions/models.SendMessage"
-                }
-            }
-        },
-        "models.WSChatOut": {
-            "type": "object",
-            "properties": {
-                "newMessages": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.Message"
+                "payload": {
+                    "type": "object",
+                    "properties": {
+                        "deleteMessage": {
+                            "$ref": "#/definitions/models.DeleteMessage"
+                        },
+                        "editMessage": {
+                            "$ref": "#/definitions/models.EditMessage"
+                        },
+                        "getMessages": {
+                            "$ref": "#/definitions/models.GetMessages"
+                        },
+                        "replyMessage": {
+                            "$ref": "#/definitions/models.ReplyMessage"
+                        },
+                        "sendMessage": {
+                            "$ref": "#/definitions/models.SendMessage"
+                        }
                     }
                 }
             }
