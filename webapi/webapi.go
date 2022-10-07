@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"Messenger/internal/logger"
 	"Messenger/internal/resolver"
 	"Messenger/webapi/converters"
 	_ "Messenger/webapi/docs"
@@ -30,11 +31,11 @@ func Run(database *gorm.DB) error {
 	// swag init --parseDependency --parseInternal -g webapi.go
 	address := fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port"))
 
-	logger := log.New(os.Stderr, "[Handler] ", log.LstdFlags)
-	res := resolver.Init(database, logger)
+	log := &logger.Log{Logger: log.New(os.Stderr, "[Handler] ", log.LstdFlags)}
+	res := resolver.Init(database, log)
 	hub := resolver.NewHub()
 	go hub.Run()
-	h := handlers.Init(logger, res, hub)
+	h := handlers.Init(log, res, hub)
 
 	//gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
@@ -119,6 +120,7 @@ func Run(database *gorm.DB) error {
 	authGroup.Use(authMiddleware.MiddlewareFunc())
 
 	router.GET("/", h.HandlePing())
+	router.GET("/debug", h.HandleDebug())
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.GET("/swagger", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.POST("/login", authMiddleware.LoginHandler)
