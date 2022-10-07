@@ -1,9 +1,11 @@
 package resolver
 
 import (
+	"Messenger/database"
 	"Messenger/webapi/converters"
 	"Messenger/webapi/models"
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"time"
 )
@@ -33,17 +35,25 @@ type Client struct {
 	// The websocket connection.
 	conn *websocket.Conn
 	// Buffered channel of outbound messages.
-	send     chan []byte
+	send     chan *WsMessage
 	resolver *Resolver
-	userId   string
-	chatId   string
+	// user and chat ids for websocket connection
+	userId      string
+	localChatId string
+	chatId      uuid.UUID
+}
+
+type WsMessage struct {
+	Message []byte
+	// chat id for message distribution
+	chatId uuid.UUID
 }
 
 type Hub struct {
 	// Registered clients.
 	clients map[*Client]bool
 	// Inbound messages from the clients.
-	broadcast chan []byte
+	broadcast chan *WsMessage
 	// Register requests from the clients.
 	register chan *Client
 	// Unregister requests from clients.
@@ -52,7 +62,7 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan []byte),
+		broadcast:  make(chan *WsMessage),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		clients:    make(map[*Client]bool),
@@ -113,39 +123,44 @@ func (c *Client) readPump() {
 		}
 
 		if dat.Payload == nil {
-			c.resolver.Log.Printf("userId=%s, chatId=%s, Payload empty, message=%s, wsErr=%s", c.userId, c.chatId, message, wsErr.Error())
+			c.resolver.Log.Printf("userId=%s, localChatId=%s, Payload empty, message=%s, wsErr=%s", c.userId, c.localChatId, message, wsErr.Error())
 			break
 		}
 
 		switch dat.Action {
 		case "sendMessage":
-			err = c.resolver.CreateWsMessage(models.SendMessage{Text: dat.Payload["text"].(string)}, c.chatId, c.userId)
+			msg, err := c.resolver.CreateWsMessage(models.SendMessage{Text: dat.Payload["text"].(string)}, c.localChatId, c.userId)
 			if err != nil {
 				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
-			message = []byte(dat.Payload["text"].(string))
+			//c.resolver.Log.Printf("new message %s", dat.Payload["text"].(string))
+			res, err := json.Marshal(converters.MessagesToWsMessages([]database.Message{*msg}))
+			message = res
 		case "editMessage":
-			err := c.resolver.EditWsMessage(models.EditMessage{NewText: dat.Payload["text"].(string), MessageId: uint32(dat.Payload["messageId"].(float64))}, c.chatId, c.userId)
+			err := c.resolver.EditWsMessage(models.EditMessage{NewText: dat.Payload["text"].(string), MessageId: uint32(dat.Payload["messageId"].(float64))}, c.localChatId, c.userId)
 			if err != nil {
 				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
 		case "deleteMessage":
-			err := c.resolver.DeleteWsMessage(models.DeleteMessage{MessageId: uint32(dat.Payload["messageId"].(float64))}, c.chatId, c.userId)
+			err := c.resolver.DeleteWsMessage(models.DeleteMessage{MessageId: uint32(dat.Payload["messageId"].(float64))}, c.localChatId, c.userId)
 			if err != nil {
 				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
 		case "replyMessage":
-			err := c.resolver.ReplyWsMessage(models.ReplyMessage{ReplyMessageId: uint32(dat.Payload["replyMessageId"].(float64)), Text: dat.Payload["text"].(string)}, c.chatId, c.userId)
+			msg, err := c.resolver.ReplyWsMessage(models.ReplyMessage{ReplyMessageId: uint32(dat.Payload["replyMessageId"].(float64)), Text: dat.Payload["text"].(string)}, c.localChatId, c.userId)
 			if err != nil {
 				c.resolver.Log.Printf("error: %v", err)
 				break
 			}
+			//c.resolver.Log.Printf("new message %s", dat.Payload["text"].(string))
+			res, err := json.Marshal(converters.MessagesToWsMessages([]database.Message{*msg}))
+			message = res
 		case "getMessages":
 			payload := models.GetMessages{Limit: int(dat.Payload["limit"].(float64)), Offset: int(dat.Payload["offset"].(float64))}
-			messages, err := c.resolver.GetWsMessages(payload, c.chatId, c.userId)
+			messages, err := c.resolver.GetWsMessages(payload, c.localChatId, c.userId)
 			if err != nil {
 				c.resolver.Log.Printf("error: %v", err)
 				break
@@ -159,7 +174,7 @@ func (c *Client) readPump() {
 		}
 
 		if len(message) > 0 {
-			c.hub.broadcast <- message
+			c.hub.broadcast <- &WsMessage{Message: message, chatId: c.chatId}
 		}
 	}
 }
@@ -185,21 +200,24 @@ func (c *Client) writePump() {
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
+			if message.chatId == c.chatId {
+				w, err := c.conn.NextWriter(websocket.TextMessage)
+				if err != nil {
+					return
+				}
+				w.Write(message.Message)
 
-			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.send)
-			}
+				// Add queued chat messages to the current websocket message.
+				n := len(c.send)
+				for i := 0; i < n; i++ {
+					w.Write(newline)
+					msg := <-c.send
+					w.Write(msg.Message)
+				}
 
-			if err := w.Close(); err != nil {
-				return
+				if err := w.Close(); err != nil {
+					return
+				}
 			}
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
@@ -212,7 +230,7 @@ func (c *Client) writePump() {
 
 // ServeWs handles websocket requests from the peer.
 func (r Resolver) ServeWs(hub *Hub, conn *websocket.Conn, res *Resolver, userId string, chatId string) {
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), userId: userId, chatId: chatId, resolver: res}
+	client := &Client{hub: hub, conn: conn, send: make(chan *WsMessage, 256), userId: userId, localChatId: chatId, chatId: res.ChatIdToUUID(chatId, userId), resolver: res}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

@@ -1,5 +1,16 @@
 package models
 
+type WsMessage struct {
+	Action  string `json:"action"`
+	Payload struct {
+		SendMessage   SendMessage
+		EditMessage   EditMessage
+		DeleteMessage DeleteMessage
+		ReplyMessage  ReplyMessage
+		GetMessages   GetMessages
+	} `json:"payload"`
+}
+
 type MessageType struct {
 	Action  string                 `json:"action"`
 	Payload map[string]interface{} `json:"payload"`

@@ -3,8 +3,10 @@ package resolver
 import (
 	"Messenger/database"
 	"Messenger/webapi/models"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -47,6 +49,23 @@ func (r Resolver) GetUserChats(userId string) []*database.Chat {
 		})
 	}
 	return res
+}
+
+func (r Resolver) ChatIdToUUID(chatId string, userId string) uuid.UUID {
+	chat, err := r.chatFromChatId(userId, chatId)
+	if err != nil {
+		return uuid.UUID{}
+	}
+	return chat.Id
+}
+
+func (r Resolver) chatFromChatId(userId, chatId string) (*database.Chat, error) {
+	chats := r.GetUserChats(userId)
+	chat, err := strconv.Atoi(chatId)
+	if err != nil {
+		return nil, err
+	}
+	return chats[chat], nil
 }
 
 func makeUsersForChat(db *gorm.DB, usernames []string) []*database.User {
