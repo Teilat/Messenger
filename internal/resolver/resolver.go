@@ -2,17 +2,17 @@ package resolver
 
 import (
 	"Messenger/internal/cache"
+	"Messenger/internal/logger"
 	"gorm.io/gorm"
-	"log"
 )
 
 type Resolver struct {
-	Log          *log.Logger
+	Log          *logger.Log
 	Db           *gorm.DB
 	MessageCache *cache.Cache
 }
 
-func Init(db *gorm.DB, log *log.Logger) *Resolver {
+func Init(db *gorm.DB, log *logger.Log) *Resolver {
 	return &Resolver{
 		Log: log,
 		Db:  db,

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"Messenger/internal/logger"
 	"Messenger/internal/resolver"
 	"Messenger/webapi/converters"
 	"Messenger/webapi/models"
@@ -8,21 +9,21 @@ import (
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"log"
 	"net/http"
+	"runtime"
 )
 
 type Handlers struct {
-	log       *log.Logger
+	log       *logger.Log
 	upgrader  *websocket.Upgrader
 	Resolver  *resolver.Resolver
 	hub       *resolver.Hub
 	LoginUser string
 }
 
-func Init(logger *log.Logger, res *resolver.Resolver, hub *resolver.Hub) *Handlers {
+func Init(log *logger.Log, res *resolver.Resolver, hub *resolver.Hub) *Handlers {
 	return &Handlers{
-		log: logger,
+		log: log,
 		upgrader: &websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -90,7 +91,7 @@ func (h Handlers) RegisterHandler() gin.HandlerFunc {
 		var user models.AddUser
 		err := c.BindJSON(&user)
 		if err != nil {
-			log.Println(err)
+			h.log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
 		}
 
@@ -105,11 +106,11 @@ func (h Handlers) RegisterHandler() gin.HandlerFunc {
 // @Summary     upgrade request to ws
 // @Tags        Chat
 // @Accept      json
-// @Param       ws struct body models.WSChatIn false "ws struct"
+// @Param       ws struct body models.WsMessage false "ws struct"
 // @Produce     json
-// @Success     101 {object} models.WSChatOut "ws struct"
+// @Success     101
 // @Error       500 {string} string
-// @Router      /chat/:id [get]
+// @Router      /chat/{id} [get]
 func (h Handlers) WSChatHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := jwt.ExtractClaims(c)
@@ -156,7 +157,7 @@ func (h Handlers) CreateChatHandler() gin.HandlerFunc {
 		var params models.AddChat
 		err := c.BindJSON(&params)
 		if err != nil {
-			log.Println(err)
+			h.log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
 		}
 		params.Users = append(params.Users)
@@ -183,9 +184,15 @@ func (h Handlers) UpdateChatHandler() gin.HandlerFunc {
 // @Param       username path string true "username"
 // @Success     200 {object} models.User
 // @Error       500 {string} string
-// @Router      /user/:username [get]
+// @Router      /user/{username} [get]
 func (h Handlers) GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.JSON(http.StatusOK, converters.UserToApiUser(h.Resolver.GetUserByUsername(c.Param("username"))))
+	}
+}
+
+func (h Handlers) HandleDebug() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"goroutines": runtime.NumGoroutine()})
 	}
 }
