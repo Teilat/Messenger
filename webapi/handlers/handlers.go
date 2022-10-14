@@ -14,14 +14,13 @@ import (
 )
 
 type Handlers struct {
-	log       *logger.Log
-	upgrader  *websocket.Upgrader
-	Resolver  *resolver.Resolver
-	hub       *resolver.Hub
-	LoginUser string
+	log      *logger.MyLog
+	upgrader *websocket.Upgrader
+	Resolver *resolver.Resolver
+	hub      *resolver.Hub
 }
 
-func Init(log *logger.Log, res *resolver.Resolver, hub *resolver.Hub) *Handlers {
+func Init(log *logger.MyLog, res *resolver.Resolver, hub *resolver.Hub) *Handlers {
 	return &Handlers{
 		log: log,
 		upgrader: &websocket.Upgrader{
@@ -153,7 +152,6 @@ func (h Handlers) GetAllChatsHandler() gin.HandlerFunc {
 // @Router      /chat [post]
 func (h Handlers) CreateChatHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		var params models.AddChat
 		err := c.BindJSON(&params)
 		if err != nil {
