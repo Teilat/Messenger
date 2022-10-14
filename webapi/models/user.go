@@ -5,13 +5,9 @@ type User struct {
 	Nickname   string `json:"nickname" example:"Nickname"`
 	Bio        string `json:"bio"   example:"What are you taking about?" `
 	Phone      string `json:"phone" example:"+78005553535"`
-	CreatedAt  string `json:"createdAt" example:"1662070156" description:"unix time"`
-	LastOnline string `json:"lastOnline" example:"1662070156" description:"unix time"`
-}
-
-type UserCredentials struct {
-	Nickname string `json:"name" example:"Nickname"`
-	Password string `json:"password" example:"password"`
+	CreatedAt  string `json:"createdAt" description:"str time"`
+	LastOnline string `json:"lastOnline" description:"str time"`
+	Image      []byte `json:"image" description:"user image"`
 }
 
 type AddUser struct {

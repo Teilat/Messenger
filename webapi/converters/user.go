@@ -15,6 +15,7 @@ func UserToApiUser(user *database.User) models.User {
 		Phone:      user.Phone,
 		CreatedAt:  user.CreatedAt.Format(DefaultTimeFormat),
 		LastOnline: user.LastOnline.Format(DefaultTimeFormat),
+		Image:      user.Image,
 	}
 }
 

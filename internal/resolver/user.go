@@ -4,7 +4,7 @@ import (
 	"Messenger/database"
 	"Messenger/webapi/models"
 	"fmt"
-	"gorm.io/gorm"
+	"mime/multipart"
 	"time"
 )
 
@@ -27,11 +27,24 @@ func (r Resolver) GetUserByUsername(username string) *database.User {
 	r.Db.Where("username = ?", username).Preload("Chats").First(&user)
 	fmt.Println("found:", user.Username)
 	r.Db.Find(&user.Chats).Preload("Messages")
-	updateLastOnline(r.Db, username)
+	r.updateLastOnline(username)
 	return &user
 }
 
-func updateLastOnline(db *gorm.DB, username string) {
+func (r Resolver) UpdateUserImage(username string, image *multipart.FileHeader) error {
+	user := r.GetUserByUsername(username)
+	asd, _ := image.Open()
+	asd.Read(user.Image)
+
+	res := r.Db.Save(user)
+	if res.Error != nil {
+		return res.Error
+	}
+
+	return nil
+}
+
+func (r Resolver) updateLastOnline(username string) {
 	updateTime := time.Now()
-	db.First(&database.User{Username: username}).Update("last_online", updateTime)
+	r.Db.First(&database.User{Username: username}).Update("last_online", updateTime)
 }

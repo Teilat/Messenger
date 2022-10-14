@@ -189,6 +189,26 @@ func (h Handlers) GetUser() gin.HandlerFunc {
 	}
 }
 
+// UpdateUserImage  godoc
+// @Summary     upload new user image in []byte format
+// @Tags        User
+// @Accept      mpfd
+// @Produce     json
+// @Success     200
+// @Error       500 {string} string
+// @Router      /user/image [post]
+func (h Handlers) UpdateUserImage() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims := jwt.ExtractClaims(c)
+		file, _ := c.FormFile("image")
+		err := h.Resolver.UpdateUserImage(claims["username"].(string), file)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to upload image"})
+		}
+		c.JSON(http.StatusOK, gin.H{})
+	}
+}
+
 func (h Handlers) HandleDebug() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"goroutines": runtime.NumGoroutine()})
