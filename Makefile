@@ -30,16 +30,20 @@ gen-ssl:
 	openssl req -newkey rsa:4096 -keyout server-key.pem -out server-req.pem -subj "/C=RU/ST=Vologda/L=Vologda/O=Default Company Ltd/CN=192.168.1.44"
 	openssl x509 -req -in server-req.pem -days 365 -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
 
-windows: vendor $(BUILD_FOLDER)/windows/logconfig.json ## Build artifacts for windows
+windows: vendor ## Build artifacts for windows
+	touch $(BUILD_FOLDER)/windows/logconfig.json
 	@printf $(PRINTF_FORMAT) BINARY_NAME: $(WIN_BINARY_NAME)
 	@printf $(PRINTF_FORMAT) BINARY_BUILD_DATE: $(BINARY_BUILD_DATE)
 	mkdir -p $(BUILD_FOLDER)/windows
+	cp ./config.yaml $(BUILD_FOLDER)/windows
 	env GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CXX=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc  go build -ldflags "-s -w -X $(BINARY_NAME).Version=$(BINARY_VERSION) -X $(BINARY_NAME).BuildDate=$(BINARY_BUILD_DATE)" -o $(BUILD_FOLDER)/windows/$(WIN_BINARY_NAME) .
 
-linux: vendor $(BUILD_FOLDER)/linux/logconfig.json ## Build artifacts for linux
+linux: vendor ## Build artifacts for linux
+	touch $(BUILD_FOLDER)/linux/logconfig.json
 	@printf $(PRINTF_FORMAT) BINARY_NAME: $(BINARY_NAME)
 	@printf $(PRINTF_FORMAT) BINARY_BUILD_DATE: $(BINARY_BUILD_DATE)
 	mkdir -p $(BUILD_FOLDER)/linux
+	cp ./config.yaml $(BUILD_FOLDER)/windows
 	env GOOS=linux GOARCH=amd64  go build -ldflags "-s -w -X $(BINARY_NAME).Version=$(BINARY_VERSION) -X $(BINARY_NAME).BuildDate=$(BINARY_BUILD_DATE)" -o $(BUILD_FOLDER)/linux/$(BINARY_NAME) .
 
 vendor: ## Get dependencies according to go.sum

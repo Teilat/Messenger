@@ -1,18 +1,16 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.18
+FROM golang:1.18-alpine
 # creaitng dir
-WORKDIR /app
+WORKDIR /messenger
+
 # getting dependencys
 COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 # copy files
-COPY *.go ./
-COPY ./database ./
-COPY ./internal ./
-COPY ./webapi ./
-COPY config.yaml ./
+COPY . .
 # build app
-RUN go build -o /messanger/backend
+RUN go build -o /Messenger
+EXPOSE 8080
 # run app
-CMD [ "/messanger/backend" ]
+CMD [ "/Messenger" ]
