@@ -1,4 +1,4 @@
-BINARY_NAME := $(shell git config --get remote.origin.url | awk -F/ '{print $$5}' | awk -F. '{print $$1}')
+BINARY_NAME := $(shell git config --get remote.origin.url | awk -F/ '{print $$5}' | awk -F. '{print tolower($$1)}')
 BINARY_VERSION := $(shell git describe --tags)
 BINARY_BUILD_DATE := $(shell date +%d.%m.%Y)
 WIN_BINARY_NAME := $(BINARY_NAME).exe
@@ -11,7 +11,7 @@ ifeq ($(shell go env GOHOSTOS), windows)
 	ABS_PATH = $(PWD)
 endif
 
-.PHONY: all build windows linux vendor gen-webapi gen-ssl clean
+.PHONY: all build windows linux vendor gen-webapi gen-ssl clean docker-build
 
 all: build
 
@@ -31,20 +31,21 @@ gen-ssl:
 	openssl x509 -req -in server-req.pem -days 365 -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem
 
 windows: vendor ## Build artifacts for windows
-	touch $(BUILD_FOLDER)/windows/logconfig.json
 	@printf $(PRINTF_FORMAT) BINARY_NAME: $(WIN_BINARY_NAME)
 	@printf $(PRINTF_FORMAT) BINARY_BUILD_DATE: $(BINARY_BUILD_DATE)
 	mkdir -p $(BUILD_FOLDER)/windows
-	cp ./config.yaml $(BUILD_FOLDER)/windows
+	#cp ./config.yaml $(BUILD_FOLDER)/windows
 	env GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CXX=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc  go build -ldflags "-s -w -X $(BINARY_NAME).Version=$(BINARY_VERSION) -X $(BINARY_NAME).BuildDate=$(BINARY_BUILD_DATE)" -o $(BUILD_FOLDER)/windows/$(WIN_BINARY_NAME) .
 
 linux: vendor ## Build artifacts for linux
-	touch $(BUILD_FOLDER)/linux/logconfig.json
 	@printf $(PRINTF_FORMAT) BINARY_NAME: $(BINARY_NAME)
 	@printf $(PRINTF_FORMAT) BINARY_BUILD_DATE: $(BINARY_BUILD_DATE)
 	mkdir -p $(BUILD_FOLDER)/linux
-	cp ./config.yaml $(BUILD_FOLDER)/windows
+	#cp ./config.yaml $(BUILD_FOLDER)/linux
 	env GOOS=linux GOARCH=amd64  go build -ldflags "-s -w -X $(BINARY_NAME).Version=$(BINARY_VERSION) -X $(BINARY_NAME).BuildDate=$(BINARY_BUILD_DATE)" -o $(BUILD_FOLDER)/linux/$(BINARY_NAME) .
+
+docker-build: linux ## Build artifacts for linux
+	docker build -t $(BINARY_NAME) .
 
 vendor: ## Get dependencies according to go.sum
 	env GO111MODULE=auto go mod tidy
