@@ -1,17 +1,17 @@
 package resolver
 
 import (
-	"Messenger/database"
+	"Messenger/db"
 	"Messenger/webapi/models"
 	"time"
 )
 
-func (r Resolver) CreateWsMessage(msg models.SendMessage, chatId, userId string) (*database.Message, error) {
+func (r Resolver) CreateWsMessage(msg models.SendMessage, chatId, userId string) (*db.Message, error) {
 	chat, err := r.chatFromChatId(userId, chatId)
 	if err != nil {
 		return nil, err
 	}
-	res := r.Db.Create(&database.Message{
+	res := r.Db.Create(&db.Message{
 		IntId:     makeMessageId(chat),
 		Text:      msg.Text,
 		CreatedAt: time.Now(),
@@ -22,15 +22,15 @@ func (r Resolver) CreateWsMessage(msg models.SendMessage, chatId, userId string)
 		return nil, res.Error
 	}
 
-	return res.Statement.Model.(*database.Message), nil
+	return res.Statement.Model.(*db.Message), nil
 }
 
-func (r Resolver) ReplyWsMessage(msg models.ReplyMessage, chatId, userId string) (*database.Message, error) {
+func (r Resolver) ReplyWsMessage(msg models.ReplyMessage, chatId, userId string) (*db.Message, error) {
 	chat, err := r.chatFromChatId(userId, chatId)
 	if err != nil {
 		return nil, err
 	}
-	res := r.Db.Create(&database.Message{
+	res := r.Db.Create(&db.Message{
 		IntId:      makeMessageId(chat),
 		Text:       msg.Text,
 		CreatedAt:  time.Now(),
@@ -42,7 +42,7 @@ func (r Resolver) ReplyWsMessage(msg models.ReplyMessage, chatId, userId string)
 		return nil, res.Error
 	}
 
-	return res.Statement.Model.(*database.Message), nil
+	return res.Statement.Model.(*db.Message), nil
 }
 
 func (r Resolver) EditWsMessage(payload models.EditMessage, chatId, userId string) error {
@@ -84,7 +84,7 @@ func (r Resolver) DeleteWsMessage(payload models.DeleteMessage, chatId, userId s
 	return nil
 }
 
-func (r Resolver) GetWsMessages(payload models.GetMessages, chatId, userId string) ([]database.Message, error) {
+func (r Resolver) GetWsMessages(payload models.GetMessages, chatId, userId string) ([]db.Message, error) {
 	if payload.Limit > 100 {
 		payload.Limit = 100
 	}
@@ -101,7 +101,7 @@ func (r Resolver) GetWsMessages(payload models.GetMessages, chatId, userId strin
 	return chat.Messages[payload.Offset : payload.Offset+payload.Limit], nil
 }
 
-func filterDeletedMessages(chat *database.Chat, userId string) {
+func filterDeletedMessages(chat *db.Chat, userId string) {
 	for i, message := range chat.Messages {
 		if message.DeletedAt != time.Unix(0, 0) {
 			if message.DeletedForAll || message.Username == userId {
@@ -112,6 +112,6 @@ func filterDeletedMessages(chat *database.Chat, userId string) {
 	}
 }
 
-func makeMessageId(chat *database.Chat) uint32 {
+func makeMessageId(chat *db.Chat) uint32 {
 	return uint32(len(chat.Messages) + 1)
 }

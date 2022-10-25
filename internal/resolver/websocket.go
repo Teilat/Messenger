@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"Messenger/database"
+	"Messenger/db"
 	"Messenger/webapi/converters"
 	"Messenger/webapi/models"
 	"encoding/json"
@@ -135,7 +135,7 @@ func (c *Client) readPump() {
 				break
 			}
 			//c.resolver.Log.Printf("new message %s", dat.Payload["text"].(string))
-			res, err := json.Marshal(converters.MessagesToWsMessages([]database.Message{*msg}))
+			res, err := json.Marshal(converters.MessagesToWsMessages([]db.Message{*msg}))
 			message = res
 		case "editMessage":
 			err := c.resolver.EditWsMessage(models.EditMessage{NewText: dat.Payload["text"].(string), MessageId: uint32(dat.Payload["messageId"].(float64))}, c.localChatId, c.userId)
@@ -156,7 +156,7 @@ func (c *Client) readPump() {
 				break
 			}
 			//c.resolver.Log.Printf("new message %s", dat.Payload["text"].(string))
-			res, err := json.Marshal(converters.MessagesToWsMessages([]database.Message{*msg}))
+			res, err := json.Marshal(converters.MessagesToWsMessages([]db.Message{*msg}))
 			message = res
 		case "getMessages":
 			payload := models.GetMessages{Limit: int(dat.Payload["limit"].(float64)), Offset: int(dat.Payload["offset"].(float64))}

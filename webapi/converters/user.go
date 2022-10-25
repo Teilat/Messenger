@@ -1,13 +1,13 @@
 package converters
 
 import (
-	"Messenger/database"
+	"Messenger/db"
 	"Messenger/webapi/models"
 )
 
 const DefaultTimeFormat = "15:04"
 
-func UserToApiUser(user *database.User) models.User {
+func UserToApiUser(user *db.User) models.User {
 	return models.User{
 		Username:   user.Username,
 		Nickname:   user.Name,
@@ -19,7 +19,7 @@ func UserToApiUser(user *database.User) models.User {
 	}
 }
 
-func chatUsersToApiChatUsers(users []*database.User) []string {
+func chatUsersToApiChatUsers(users []*db.User) []string {
 	var res []string
 	for _, user := range users {
 		res = append(res, user.Username)

@@ -1,12 +1,12 @@
 package converters
 
 import (
-	"Messenger/database"
+	"Messenger/db"
 	"Messenger/webapi/models"
 	"sort"
 )
 
-func MessagesToWsMessages(msg []database.Message) []models.Message {
+func MessagesToWsMessages(msg []db.Message) []models.Message {
 	res := []models.Message{}
 
 	for _, message := range msg {
@@ -21,7 +21,7 @@ func MessagesToWsMessages(msg []database.Message) []models.Message {
 	return res
 }
 
-func messagesToFirstApiMessages(messages []database.Message) []models.Message {
+func messagesToFirstApiMessages(messages []db.Message) []models.Message {
 	res := make([]models.Message, 0)
 	sort.Slice(messages, func(i, j int) bool {
 		return messages[i].CreatedAt.After(messages[j].CreatedAt)

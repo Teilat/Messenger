@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Messenger/database"
+	"Messenger/db"
 	"Messenger/internal/config"
 	"Messenger/webapi"
 )
@@ -9,7 +9,7 @@ import (
 func main() {
 	// getting config from config file
 	config.GetConf()
-	db, err := database.InitPostgresql()
+	db, err := db.InitPostgresql()
 	if err != nil {
 		return
 	}

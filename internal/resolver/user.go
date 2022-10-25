@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"Messenger/database"
+	"Messenger/db"
 	"Messenger/webapi/models"
 	"fmt"
 	"mime/multipart"
@@ -9,7 +9,7 @@ import (
 )
 
 func (r Resolver) CreateUser(user models.AddUser) error {
-	res := r.Db.Create(&database.User{
+	res := r.Db.Create(&db.User{
 		Username: user.Username,
 		Name:     user.Nickname,
 		Phone:    user.Phone,
@@ -22,8 +22,8 @@ func (r Resolver) CreateUser(user models.AddUser) error {
 	return nil
 }
 
-func (r Resolver) GetUserByUsername(username string) *database.User {
-	user := database.User{}
+func (r Resolver) GetUserByUsername(username string) *db.User {
+	user := db.User{}
 	r.Db.Where("username = ?", username).Preload("Chats").First(&user)
 	fmt.Println("found:", user.Username)
 	r.Db.Find(&user.Chats).Preload("Messages")
@@ -46,5 +46,5 @@ func (r Resolver) UpdateUserImage(username string, image *multipart.FileHeader) 
 
 func (r Resolver) updateLastOnline(username string) {
 	updateTime := time.Now()
-	r.Db.First(&database.User{Username: username}).Update("last_online", updateTime)
+	r.Db.First(&db.User{Username: username}).Update("last_online", updateTime)
 }
