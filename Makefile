@@ -45,7 +45,8 @@ linux: vendor ## Build artifacts for linux
 	env GOOS=linux GOARCH=amd64  go build -ldflags "-s -w -X $(BINARY_NAME).Version=$(BINARY_VERSION) -X $(BINARY_NAME).BuildDate=$(BINARY_BUILD_DATE)" -o $(BUILD_FOLDER)/linux/$(BINARY_NAME) .
 
 docker-build: linux ## Build artifacts for linux
-	docker build -t $(BINARY_NAME) .
+	docker build --no-cache --tag $(BINARY_NAME) .
+	docker run --detach --name $(BINARY_NAME) /$(BINARY_NAME)
 
 vendor: ## Get dependencies according to go.sum
 	env GO111MODULE=auto go mod tidy
