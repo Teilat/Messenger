@@ -3,7 +3,6 @@ package resolver
 import (
 	"Messenger/database"
 	"Messenger/webapi/models"
-	"fmt"
 	"mime/multipart"
 	"time"
 )
@@ -25,7 +24,6 @@ func (r Resolver) CreateUser(user models.AddUser) error {
 func (r Resolver) GetUserByUsername(username string) *database.User {
 	user := database.User{}
 	r.Db.Where("username = ?", username).Preload("Chats").First(&user)
-	fmt.Println("found:", user.Username)
 	r.Db.Find(&user.Chats).Preload("Messages")
 	r.updateLastOnline(username)
 	return &user
