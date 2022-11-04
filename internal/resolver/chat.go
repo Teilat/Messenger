@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"Messenger/db"
+	"Messenger/database"
 	"Messenger/webapi/models"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-func (r Resolver) CreateChat(chat models.AddChat) (*db.Chat, error) {
-	res := r.Db.Create(&db.Chat{
+func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
+	res := r.Db.Create(&database.Chat{
 		Name:      chat.Name,
 		CreatedAt: time.Now(),
 		Users:     makeUsersForChat(r.Db, chat.Users),
@@ -21,12 +21,12 @@ func (r Resolver) CreateChat(chat models.AddChat) (*db.Chat, error) {
 		return nil, res.Error
 	}
 
-	return res.Statement.Model.(*db.Chat), nil
+	return res.Statement.Model.(*database.Chat), nil
 }
 
-func (r Resolver) GetUserChats(userId string) []*db.Chat {
-	var chats []*db.Chat
-	var res []*db.Chat
+func (r Resolver) GetUserChats(userId string) []*database.Chat {
+	var chats []*database.Chat
+	var res []*database.Chat
 	r.Db.
 		Preload("Users").
 		Preload("Messages").
@@ -59,7 +59,7 @@ func (r Resolver) ChatIdToUUID(chatId string, userId string) uuid.UUID {
 	return chat.Id
 }
 
-func (r Resolver) chatFromChatId(userId, chatId string) (*db.Chat, error) {
+func (r Resolver) chatFromChatId(userId, chatId string) (*database.Chat, error) {
 	chats := r.GetUserChats(userId)
 	chat, err := strconv.Atoi(chatId)
 	if err != nil {
@@ -68,8 +68,8 @@ func (r Resolver) chatFromChatId(userId, chatId string) (*db.Chat, error) {
 	return chats[chat], nil
 }
 
-func makeUsersForChat(database *gorm.DB, usernames []string) []*db.User {
-	user := make([]*db.User, 0)
-	database.Preload("Chats").Where("username IN ?", usernames).Find(&user)
+func makeUsersForChat(db *gorm.DB, usernames []string) []*database.User {
+	user := make([]*database.User, 0)
+	db.Preload("Chats").Where("username IN ?", usernames).Find(&user)
 	return user
 }

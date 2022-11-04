@@ -1,7 +1,6 @@
 package webapi
 
 import (
-	"Messenger/internal/logger"
 	"Messenger/internal/resolver"
 	_ "Messenger/webapi/docs"
 	"Messenger/webapi/handlers"
@@ -14,8 +13,25 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 	"log"
-	"os"
 )
+
+type WebapiProvider struct {
+	address  string
+	database *gorm.DB
+	resolver *resolver.Resolver
+	hub      *resolver.Hub
+	handler  *handlers.Handlers
+}
+
+func NewWebapi(db *gorm.DB, res *resolver.Resolver, hub *resolver.Hub, handlers *handlers.Handlers) *WebapiProvider {
+	return &WebapiProvider{
+		address:  fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port")),
+		database: db,
+		resolver: res,
+		hub:      hub,
+		handler:  handlers,
+	}
+}
 
 // @Title     Application Api
 // @Version   1.0
@@ -23,19 +39,10 @@ import (
 // @in header
 // @name Authorization
 
-func Run(database *gorm.DB) error {
-	address := fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port"))
+func (w WebapiProvider) Run() error {
+	go w.hub.Run()
 
-	resolverLog := logger.NewLogger(log.New(os.Stderr, "[Resolver] ", log.LstdFlags))
-	res := resolver.Init(database, resolverLog)
-
-	hub := resolver.NewHub()
-	go hub.Run()
-
-	handlerLog := logger.NewLogger(log.New(os.Stderr, "[Handler] ", log.LstdFlags))
-	h := handlers.Init(handlerLog, res, hub)
-
-	authMiddleware, err := jwt.New(newJwtMiddleware(h.Resolver, true))
+	authMiddleware, err := jwt.New(newJwtMiddleware(w.handler.Resolver, true))
 	if err != nil {
 		log.Fatal("JWT Error:" + err.Error())
 	}
@@ -53,20 +60,20 @@ func Run(database *gorm.DB) error {
 	authGroup := router.Group("")
 	authGroup.Use(authMiddleware.MiddlewareFunc())
 
-	router.GET("/", h.HandlePing())
-	router.GET("/debug", h.HandleDebug())
+	router.GET("/", w.handler.HandlePing())
+	router.GET("/debug", w.handler.HandleDebug())
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.GET("/swagger", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.POST("/login", authMiddleware.LoginHandler)
-	router.POST("/register", h.RegisterHandler())
+	router.POST("/register", w.handler.RegisterHandler())
 	authGroup.GET("/logout", authMiddleware.LogoutHandler)
-	authGroup.GET("/user/:username", h.GetUser())
+	authGroup.GET("/user/:username", w.handler.GetUser())
 
-	authGroup.GET("/chats", h.GetAllChatsHandler())
-	authGroup.POST("/chat", h.CreateChatHandler())
-	authGroup.GET("/chat/:id", h.WSChatHandler())
+	authGroup.GET("/chats", w.handler.GetAllChatsHandler())
+	authGroup.POST("/chat", w.handler.CreateChatHandler())
+	authGroup.GET("/chat/:id", w.handler.WSChatHandler())
 
-	err = router.Run(address)
+	err = router.Run(w.address)
 	//err := router.RunTLS(address, "./server-cert.pem", "./server-key.pem")
 	if err != nil {
 		log.Fatal(err)

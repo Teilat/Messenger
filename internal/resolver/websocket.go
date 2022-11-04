@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"Messenger/db"
+	"Messenger/database"
 	"Messenger/webapi/converters"
 	"Messenger/webapi/models"
 	"encoding/json"
@@ -109,7 +109,7 @@ func (c *Client) readPump() {
 		_, message, wsErr := c.conn.ReadMessage()
 		if wsErr != nil {
 			if websocket.IsUnexpectedCloseError(wsErr, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				c.resolver.Log.Printf("error: %v", wsErr)
+				c.resolver.Log.Log.Printf("error: %v", wsErr)
 			}
 			break
 		}
@@ -117,13 +117,13 @@ func (c *Client) readPump() {
 		var dat models.MessageType
 		err := json.Unmarshal(message, &dat)
 		if err != nil {
-			c.resolver.Log.Printf("error: %v", err)
+			c.resolver.Log.Log.Printf("error: %v", err)
 		} else {
 			message = []byte{}
 		}
 
 		if dat.Payload == nil {
-			c.resolver.Log.Printf("userId=%s, localChatId=%s, Payload empty, message=%s, wsErr=%s", c.userId, c.localChatId, message, wsErr.Error())
+			c.resolver.Log.Log.Printf("userId=%s, localChatId=%s, Payload empty, message=%s, wsErr=%s", c.userId, c.localChatId, message, wsErr.Error())
 			break
 		}
 
@@ -131,43 +131,43 @@ func (c *Client) readPump() {
 		case "sendMessage":
 			msg, err := c.resolver.CreateWsMessage(models.SendMessage{Text: dat.Payload["text"].(string)}, c.localChatId, c.userId)
 			if err != nil {
-				c.resolver.Log.Printf("error: %v", err)
+				c.resolver.Log.Log.Printf("error: %v", err)
 				break
 			}
 			//c.resolver.Log.Printf("new message %s", dat.Payload["text"].(string))
-			res, err := json.Marshal(converters.MessagesToWsMessages([]db.Message{*msg}))
+			res, err := json.Marshal(converters.MessagesToWsMessages([]database.Message{*msg}))
 			message = res
 		case "editMessage":
 			err := c.resolver.EditWsMessage(models.EditMessage{NewText: dat.Payload["text"].(string), MessageId: uint32(dat.Payload["messageId"].(float64))}, c.localChatId, c.userId)
 			if err != nil {
-				c.resolver.Log.Printf("error: %v", err)
+				c.resolver.Log.Log.Printf("error: %v", err)
 				break
 			}
 		case "deleteMessage":
 			err := c.resolver.DeleteWsMessage(models.DeleteMessage{MessageId: uint32(dat.Payload["messageId"].(float64))}, c.localChatId, c.userId)
 			if err != nil {
-				c.resolver.Log.Printf("error: %v", err)
+				c.resolver.Log.Log.Printf("error: %v", err)
 				break
 			}
 		case "replyMessage":
 			msg, err := c.resolver.ReplyWsMessage(models.ReplyMessage{ReplyMessageId: uint32(dat.Payload["replyMessageId"].(float64)), Text: dat.Payload["text"].(string)}, c.localChatId, c.userId)
 			if err != nil {
-				c.resolver.Log.Printf("error: %v", err)
+				c.resolver.Log.Log.Printf("error: %v", err)
 				break
 			}
 			//c.resolver.Log.Printf("new message %s", dat.Payload["text"].(string))
-			res, err := json.Marshal(converters.MessagesToWsMessages([]db.Message{*msg}))
+			res, err := json.Marshal(converters.MessagesToWsMessages([]database.Message{*msg}))
 			message = res
 		case "getMessages":
 			payload := models.GetMessages{Limit: int(dat.Payload["limit"].(float64)), Offset: int(dat.Payload["offset"].(float64))}
 			messages, err := c.resolver.GetWsMessages(payload, c.localChatId, c.userId)
 			if err != nil {
-				c.resolver.Log.Printf("error: %v", err)
+				c.resolver.Log.Log.Printf("error: %v", err)
 				break
 			}
 			err = c.conn.WriteJSON(converters.MessagesToWsMessages(messages))
 			if err != nil {
-				c.resolver.Log.Printf("error: %v", err)
+				c.resolver.Log.Log.Printf("error: %v", err)
 				break
 			}
 		default:

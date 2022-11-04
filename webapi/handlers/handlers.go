@@ -90,7 +90,7 @@ func (h Handlers) RegisterHandler() gin.HandlerFunc {
 		var user models.AddUser
 		err := c.BindJSON(&user)
 		if err != nil {
-			h.log.Println(err)
+			h.log.Log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
 		}
 
@@ -115,7 +115,7 @@ func (h Handlers) WSChatHandler() gin.HandlerFunc {
 		claims := jwt.ExtractClaims(c)
 		//upgrade get request to websocket protocol
 		var id = c.Param("id")
-		h.log.Printf("ws for %s", id)
+		h.log.Log.Printf("ws for %s", id)
 		ws, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			fmt.Println(err)
@@ -155,7 +155,7 @@ func (h Handlers) CreateChatHandler() gin.HandlerFunc {
 		var params models.AddChat
 		err := c.BindJSON(&params)
 		if err != nil {
-			h.log.Println(err)
+			h.log.Log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
 		}
 		params.Users = append(params.Users)

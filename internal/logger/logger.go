@@ -5,9 +5,21 @@ import (
 	"log"
 )
 
+const (
+	Reset  = "\033[0m"
+	Red    = "\033[31m"
+	Green  = "\033[32m"
+	Yellow = "\033[33m"
+	Blue   = "\033[34m"
+	Purple = "\033[35m"
+	Cyan   = "\033[36m"
+	Gray   = "\033[37m"
+	White  = "\033[97m"
+)
+
 type MyLog struct {
 	error
-	*log.Logger
+	Log    *log.Logger
 	fields *LogFields
 }
 
@@ -15,7 +27,7 @@ type LogFields map[string]interface{}
 
 func NewLogger(log *log.Logger) *MyLog {
 	return &MyLog{
-		Logger: log,
+		Log: log,
 	}
 }
 
@@ -32,14 +44,15 @@ func (l *MyLog) WithFields(fields LogFields) {
 	l.fields = &fields
 }
 
-func (l *MyLog) Info() {
+func (l *MyLog) Info(text string) {
+	fmt.Println(text)
+}
+
+func (l *MyLog) Debug(text string) {
+	fmt.Println(Yellow + text + Reset)
 
 }
 
-func (l *MyLog) Debug() {
-
-}
-
-func (l *MyLog) Error() {
-
+func (l *MyLog) Error(text string, v ...any) {
+	fmt.Println(Red + text + Reset)
 }
