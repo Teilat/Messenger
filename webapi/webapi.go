@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"Messenger/internal/logger"
 	"Messenger/internal/resolver"
 	_ "Messenger/webapi/docs"
 	"Messenger/webapi/handlers"
@@ -12,19 +13,19 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
-	"log"
 )
 
-type WebapiProvider struct {
+type WebApiProvider struct {
 	address  string
+	logger   *logger.MyLog
 	database *gorm.DB
 	resolver *resolver.Resolver
 	hub      *resolver.Hub
 	handler  *handlers.Handlers
 }
 
-func NewWebapi(db *gorm.DB, res *resolver.Resolver, hub *resolver.Hub, handlers *handlers.Handlers) *WebapiProvider {
-	return &WebapiProvider{
+func NewWebapi(db *gorm.DB, res *resolver.Resolver, hub *resolver.Hub, handlers *handlers.Handlers) *WebApiProvider {
+	return &WebApiProvider{
 		address:  fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port")),
 		database: db,
 		resolver: res,
@@ -39,16 +40,16 @@ func NewWebapi(db *gorm.DB, res *resolver.Resolver, hub *resolver.Hub, handlers 
 // @in header
 // @name Authorization
 
-func (w WebapiProvider) Run() error {
+func (w WebApiProvider) Run() error {
 	go w.hub.Run()
 
-	authMiddleware, err := jwt.New(newJwtMiddleware(w.handler.Resolver, true))
+	authMiddleware, err := jwt.New(newJwtMiddleware(w.resolver, true))
 	if err != nil {
-		log.Fatal("JWT Error:" + err.Error())
+		w.logger.Error("JWT Error:" + err.Error())
 	}
 	errInit := authMiddleware.MiddlewareInit()
 	if errInit != nil {
-		log.Fatal("Auth middleware init error:" + errInit.Error())
+		w.logger.Error("Auth middleware init error:" + errInit.Error())
 	}
 
 	//gin.SetMode(gin.ReleaseMode)
@@ -76,7 +77,7 @@ func (w WebapiProvider) Run() error {
 	err = router.Run(w.address)
 	//err := router.RunTLS(address, "./server-cert.pem", "./server-key.pem")
 	if err != nil {
-		log.Fatal(err)
+		w.logger.Error(err.Error())
 	}
 	return nil
 }

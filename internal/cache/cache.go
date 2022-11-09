@@ -1,11 +1,12 @@
 package cache
 
 import (
+	"Messenger/database"
 	"Messenger/internal/logger"
 	"gorm.io/gorm"
 )
 
-type C interface {
+type Cache interface {
 	CreateChat()
 	UpdateChat()
 	DeleteChat()
@@ -19,62 +20,75 @@ type C interface {
 	DeleteUser()
 }
 
-type Cache struct {
+type dbStructs struct {
+	User    []*database.User
+	Message []*database.Message
+	Chat    []*database.Chat
+}
+
+type cache struct {
 	db  *gorm.DB
 	log *logger.MyLog
+
+	createChan chan dbStructs
+	updateChan chan dbStructs
+	deleteChan chan dbStructs
 }
 
-func NewCache(logger *logger.MyLog, db *gorm.DB) *Cache {
-	return &Cache{
-		db:  db,
-		log: logger,
+func NewCache(logger *logger.MyLog, db *gorm.DB) Cache {
+	return &cache{
+		db:         db,
+		log:        logger,
+		createChan: make(chan dbStructs),
+		updateChan: make(chan dbStructs),
+		deleteChan: make(chan dbStructs),
 	}
 }
-func (c Cache) Run() {
+func (c cache) Run() {
 
 }
 
-func (c Cache) CreateChat() {
+func (c cache) CreateChat() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c Cache) UpdateChat() {
+func (c cache) UpdateChat() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c Cache) DeleteChat() {
+func (c cache) DeleteChat() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c Cache) CreateMessage() {
+func (c cache) CreateMessage() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c Cache) UpdateMessage() {
+func (c cache) UpdateMessage() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c Cache) DeleteMessage() {
+func (c cache) DeleteMessage() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c Cache) CreateUser() {
+func (c cache) CreateUser() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c Cache) UpdateUser() {
+func (c cache) UpdateUser() {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c Cache) DeleteUser() {
+func (c cache) DeleteUser() {
 	//TODO implement me
 	panic("implement me")
 }
