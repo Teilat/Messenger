@@ -3,92 +3,69 @@ package cache
 import (
 	"Messenger/database"
 	"Messenger/internal/logger"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Cache interface {
-	CreateChat()
-	UpdateChat()
-	DeleteChat()
+	Start() (chan UpdateMessage, chan DeleteMessage)
+	run()
 
-	CreateMessage()
-	UpdateMessage()
-	DeleteMessage()
+	Chat(id uuid.UUID) database.Chat
+	CreateChat(chat database.Chat) bool
+	UpdateChat(chat database.Chat) bool
+	DeleteChat(id uuid.UUID) bool
 
-	CreateUser()
-	UpdateUser()
-	DeleteUser()
+	Message(id uuid.UUID) database.Message
+	CreateMessage(msg database.Message) bool
+	UpdateMessage(msg database.Message) bool
+	DeleteMessage(id uuid.UUID) bool
+
+	User(id uuid.UUID) database.User
+	CreateUser(user database.User) bool
+	UpdateUser(user database.User) bool
+	DeleteUser(id uuid.UUID) bool
 }
 
-type dbStructs struct {
+type UpdateMessage struct {
 	User    []*database.User
 	Message []*database.Message
 	Chat    []*database.Chat
 }
 
+type DeleteMessage struct {
+	User    []uuid.UUID
+	Message []uuid.UUID
+	Chat    []uuid.UUID
+}
+
 type cache struct {
 	db  *gorm.DB
-	log *logger.MyLog
+	log *logger.Logger
 
-	createChan chan dbStructs
-	updateChan chan dbStructs
-	deleteChan chan dbStructs
+	user    []*database.User
+	message []*database.Message
+	chat    []*database.Chat
+
+	updateChan chan UpdateMessage
+	deleteChan chan DeleteMessage
 }
 
-func NewCache(logger *logger.MyLog, db *gorm.DB) Cache {
+func NewCache(logger *logger.Logger, db *gorm.DB) Cache {
 	return &cache{
-		db:         db,
-		log:        logger,
-		createChan: make(chan dbStructs),
-		updateChan: make(chan dbStructs),
-		deleteChan: make(chan dbStructs),
+		db:  db,
+		log: logger,
 	}
 }
-func (c cache) Run() {
-
+func (c *cache) Start() (chan UpdateMessage, chan DeleteMessage) {
+	go c.run()
+	return c.updateChan, c.deleteChan
 }
 
-func (c cache) CreateChat() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c cache) UpdateChat() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c cache) DeleteChat() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c cache) CreateMessage() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c cache) UpdateMessage() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c cache) DeleteMessage() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c cache) CreateUser() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c cache) UpdateUser() {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (c cache) DeleteUser() {
-	//TODO implement me
-	panic("implement me")
+func (c *cache) run() {
+	c.updateChan = make(chan UpdateMessage)
+	c.deleteChan = make(chan DeleteMessage)
+	for {
+		select {}
+	}
 }

@@ -17,7 +17,7 @@ import (
 
 type WebApiProvider struct {
 	address  string
-	logger   *logger.MyLog
+	logger   *logger.Logger
 	database *gorm.DB
 	resolver *resolver.Resolver
 	hub      *resolver.Hub

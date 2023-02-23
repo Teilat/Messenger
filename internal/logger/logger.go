@@ -17,42 +17,26 @@ const (
 	White  = "\033[97m"
 )
 
-type MyLog struct {
+type Logger struct {
 	error
-	Log    *log.Logger
-	fields *LogFields
+	Log *log.Logger
 }
 
-type LogFields map[string]interface{}
-
-func NewLogger(log *log.Logger) *MyLog {
-	return &MyLog{
+func NewLogger(log *log.Logger) *Logger {
+	return &Logger{
 		Log: log,
 	}
 }
 
-func (l *MyLog) iterateFields() {
-	if l.fields == nil {
-		return
-	}
-	for s, i := range *l.fields {
-		fmt.Println(s, " : ", i)
-	}
+func (l *Logger) Info(text string) {
+	fmt.Println(Blue + text + Reset)
 }
 
-func (l *MyLog) WithFields(fields LogFields) {
-	l.fields = &fields
-}
-
-func (l *MyLog) Info(text string) {
-	fmt.Println(text)
-}
-
-func (l *MyLog) Debug(text string) {
+func (l *Logger) Debug(text string) {
 	fmt.Println(Yellow + text + Reset)
 
 }
 
-func (l *MyLog) Error(text string, v ...any) {
+func (l *Logger) Error(text string, v ...any) {
 	fmt.Println(Red + text + Reset)
 }

@@ -10,10 +10,10 @@ import (
 
 type DbProvider struct {
 	connString string
-	log        *logger.MyLog
+	log        *logger.Logger
 }
 
-func NewDbProvider(log *logger.MyLog) *DbProvider {
+func NewDbProvider(log *logger.Logger) *DbProvider {
 	return &DbProvider{
 		connString: fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
 			viper.Get("postgresql.user"),

@@ -14,13 +14,13 @@ import (
 )
 
 type Handlers struct {
-	log      *logger.MyLog
+	log      *logger.Logger
 	upgrader *websocket.Upgrader
 	Resolver *resolver.Resolver
 	hub      *resolver.Hub
 }
 
-func Init(log *logger.MyLog, res *resolver.Resolver, hub *resolver.Hub) *Handlers {
+func Init(log *logger.Logger, res *resolver.Resolver, hub *resolver.Hub) *Handlers {
 	return &Handlers{
 		log: log,
 		upgrader: &websocket.Upgrader{
