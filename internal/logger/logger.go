@@ -34,7 +34,6 @@ func (l *Logger) Info(text string) {
 
 func (l *Logger) Debug(text string) {
 	fmt.Println(Yellow + text + Reset)
-
 }
 
 func (l *Logger) Error(text string, v ...any) {

@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"Messenger/database"
+	"Messenger/internal/database"
 	"Messenger/webapi/models"
 	"fmt"
 	"gorm.io/gorm"

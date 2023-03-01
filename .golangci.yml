@@ -1,0 +1,17 @@
+run:
+  concurrency: 4
+  timeout: 5m
+linters:
+  enable:
+    - asciicheck
+    - dogsled
+    - durationcheck
+    - exportloopref
+    - forcetypeassert
+    - goconst
+    - gocritic
+    - nilerr
+    - tagliatelle
+    - unconvert
+    - unparam
+    - whitespace

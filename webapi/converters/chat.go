@@ -1,7 +1,7 @@
 package converters
 
 import (
-	"Messenger/database"
+	"Messenger/internal/database"
 	"Messenger/webapi/models"
 	"sort"
 	"strconv"

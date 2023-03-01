@@ -113,7 +113,7 @@ func (h Handlers) RegisterHandler() gin.HandlerFunc {
 func (h Handlers) WSChatHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := jwt.ExtractClaims(c)
-		//upgrade get request to websocket protocol
+		// upgrade get request to websocket protocol
 		var id = c.Param("id")
 		h.log.Log.Printf("ws for %s", id)
 		ws, err := h.upgrader.Upgrade(c.Writer, c.Request, nil)
@@ -158,7 +158,6 @@ func (h Handlers) CreateChatHandler() gin.HandlerFunc {
 			h.log.Log.Println(err)
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to parse params"})
 		}
-		params.Users = append(params.Users)
 		chat, err := h.Resolver.CreateChat(params)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"content": "Failed to create chat"})

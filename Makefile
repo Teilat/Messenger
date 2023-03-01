@@ -8,10 +8,10 @@ PRINTF_FORMAT := "\033[35m%-18s\033[33m %s\033[0m\n"
 
 ABS_PATH := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 ifeq ($(shell go env GOHOSTOS), windows)
-	ABS_PATH = $(PWD)
+	ABS_PATH = $(CURDIR)
 endif
 
-.PHONY: all build windows linux vendor gen-webapi gen-ssl clean docker-build
+.PHONY: all build windows linux vendor gen-webapi gen-ssl clean docker-build lint
 
 all: build
 
@@ -54,3 +54,6 @@ vendor: ## Get dependencies according to go.sum
 clean: ## Remove vendor and artifacts
 	rm -rf vendor
 	rm -rf $(BUILD_FOLDER)
+
+lint: vendor
+	docker run --rm -t -v "$(ABS_PATH)":/app -w /app --entrypoint=golangci-lint golangci/golangci-lint:v1.50.1 run -v

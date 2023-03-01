@@ -7,14 +7,15 @@ import (
 )
 
 type Resolver struct {
-	Log          *logger.Logger
+	*logger.Logger
 	Db           *gorm.DB
 	MessageCache *cache.Cache
 }
 
-func Init(db *gorm.DB, log *logger.Logger) *Resolver {
+func Init(db *gorm.DB, log *logger.Logger, cache *cache.Cache) *Resolver {
 	return &Resolver{
-		Log: log,
-		Db:  db,
+		Logger:       log,
+		Db:           db,
+		MessageCache: cache,
 	}
 }

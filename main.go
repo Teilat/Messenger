@@ -1,9 +1,9 @@
 package main
 
 import (
-	"Messenger/database"
 	"Messenger/internal/cache"
 	"Messenger/internal/config"
+	"Messenger/internal/database"
 	"Messenger/internal/logger"
 	"Messenger/internal/resolver"
 	"Messenger/webapi"
@@ -19,8 +19,8 @@ func main() {
 	dbProvider := database.NewDbProvider(logger.NewLogger(log.New(os.Stderr, "[Database] ", log.LstdFlags)))
 	db := dbProvider.Run()
 
-	cacheProvider := cache.NewCache(logger.NewLogger(log.New(os.Stderr, "[Database] ", log.LstdFlags)), db)
-	cacheProvider.Run()
+	cache := cache.NewCache(logger.NewLogger(log.New(os.Stderr, "[Database] ", log.LstdFlags)), db)
+	cache.Start()
 
 	hub := resolver.NewHub()
 

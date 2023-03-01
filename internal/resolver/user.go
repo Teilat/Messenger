@@ -1,7 +1,7 @@
 package resolver
 
 import (
-	"Messenger/database"
+	"Messenger/internal/database"
 	"Messenger/webapi/models"
 	"fmt"
 	"mime/multipart"

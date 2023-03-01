@@ -1,8 +1,9 @@
 package resolver
 
 import (
-	"Messenger/database"
+	"Messenger/internal/database"
 	"Messenger/webapi/models"
+	"fmt"
 	"time"
 )
 
@@ -30,7 +31,7 @@ func (r Resolver) ReplyWsMessage(msg models.ReplyMessage, chatId, userId string)
 	if err != nil {
 		return nil, err
 	}
-	res := r.Db.Create(&database.Message{
+	resp := r.Db.Create(&database.Message{
 		IntId:      makeMessageId(chat),
 		Text:       msg.Text,
 		CreatedAt:  time.Now(),
@@ -38,11 +39,15 @@ func (r Resolver) ReplyWsMessage(msg models.ReplyMessage, chatId, userId string)
 		ChatId:     chat.Id,
 		ResponseId: &msg.ReplyMessageId,
 	})
-	if res.Error != nil {
-		return nil, res.Error
+	if resp.Error != nil {
+		return nil, resp.Error
 	}
 
-	return res.Statement.Model.(*database.Message), nil
+	res, ok := resp.Statement.Model.(*database.Message)
+	if !ok {
+		return nil, fmt.Errorf("falied to type assert")
+	}
+	return res, nil
 }
 
 func (r Resolver) EditWsMessage(payload models.EditMessage, chatId, userId string) error {

@@ -1,9 +1,9 @@
-Postgresql:
-  Host: "192.168.1.64"
-  Port: 5432
-  User: "postgres"
-  Pass: "postgrespw"
-  Db: "mainDb"
-Api:
-  Address: "192.168.1.44"
-  Port: 8080
+postgresql:
+  host: "192.168.1.64"
+  port: 5432
+  user: "postgres"
+  pass: "postgrespw"
+  db: "mainDb"
+api:
+  address: "192.168.1.60"
+  port: 8080

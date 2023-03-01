@@ -1,8 +1,9 @@
 package resolver
 
 import (
-	"Messenger/database"
+	"Messenger/internal/database"
 	"Messenger/webapi/models"
+	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"sort"
@@ -11,17 +12,21 @@ import (
 )
 
 func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
-	res := r.Db.Create(&database.Chat{
+	resp := r.Db.Create(&database.Chat{
 		Name:      chat.Name,
 		CreatedAt: time.Now(),
 		Users:     makeUsersForChat(r.Db, chat.Users),
 		Messages:  nil,
 	})
-	if res.Error != nil {
-		return nil, res.Error
+	if resp.Error != nil {
+		return nil, resp.Error
 	}
 
-	return res.Statement.Model.(*database.Chat), nil
+	res, ok := resp.Statement.Model.(*database.Chat)
+	if !ok {
+		return nil, fmt.Errorf("falied to type assert")
+	}
+	return res, nil
 }
 
 func (r Resolver) GetUserChats(userId string) []*database.Chat {
@@ -32,7 +37,7 @@ func (r Resolver) GetUserChats(userId string) []*database.Chat {
 		Preload("Messages").
 		Find(&chats)
 
-	// TODO сделать фильтауию через запрос
+	// TODO сделать фильтрацию через запрос
 	for _, chat := range chats {
 		for _, user := range chat.Users {
 			if user.Username == userId {

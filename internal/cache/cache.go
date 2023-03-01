@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"Messenger/database"
+	"Messenger/internal/database"
 	"Messenger/internal/logger"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -9,22 +9,21 @@ import (
 
 type Cache interface {
 	Start() (chan UpdateMessage, chan DeleteMessage)
-	run()
 
-	Chat(id uuid.UUID) database.Chat
-	CreateChat(chat database.Chat) bool
-	UpdateChat(chat database.Chat) bool
-	DeleteChat(id uuid.UUID) bool
+	Chat(id uuid.UUID) (*database.Chat, bool)
+	CreateChat(chat *database.Chat) error
+	UpdateChat(chat *database.Chat) error
+	DeleteChat(id uuid.UUID) error
 
-	Message(id uuid.UUID) database.Message
-	CreateMessage(msg database.Message) bool
-	UpdateMessage(msg database.Message) bool
-	DeleteMessage(id uuid.UUID) bool
+	Message(id uuid.UUID) (*database.Message, bool)
+	CreateMessage(msg *database.Message) error
+	UpdateMessage(msg *database.Message) error
+	DeleteMessage(id uuid.UUID, deleteForAll bool) error
 
-	User(id uuid.UUID) database.User
-	CreateUser(user database.User) bool
-	UpdateUser(user database.User) bool
-	DeleteUser(id uuid.UUID) bool
+	User(id uuid.UUID) (*database.User, bool)
+	CreateUser(user *database.User) error
+	UpdateUser(user *database.User) error
+	DeleteUser(id uuid.UUID) error
 }
 
 type UpdateMessage struct {
@@ -43,9 +42,9 @@ type cache struct {
 	db  *gorm.DB
 	log *logger.Logger
 
-	user    []*database.User
-	message []*database.Message
-	chat    []*database.Chat
+	user    map[uuid.UUID]*database.User
+	message map[uuid.UUID]*database.Message
+	chat    map[uuid.UUID]*database.Chat
 
 	updateChan chan UpdateMessage
 	deleteChan chan DeleteMessage

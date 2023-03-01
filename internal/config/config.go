@@ -6,21 +6,21 @@ import (
 )
 
 type Configuration struct {
-	Postgres Postgresql `yaml:"Postgresql"`
-	Api      Api        `yaml:"Api"`
+	Postgres Postgresql `yaml:"postgresql"`
+	Api      Api        `yaml:"api"`
 }
 
 type Api struct {
-	Address string `yaml:"Address"`
-	Port    int    `yaml:"Port"`
+	Address string `yaml:"address"`
+	Port    int    `yaml:"port"`
 }
 
 type Postgresql struct {
-	Port     int    `yaml:"Port"`
-	Host     string `yaml:"Host"`
-	User     string `yaml:"User"`
-	Database string `yaml:"Db"`
-	Password string `yaml:"Pass"`
+	Port     int    `yaml:"port"`
+	Host     string `yaml:"host"`
+	User     string `yaml:"user"`
+	Database string `yaml:"db"`
+	Password string `yaml:"pass"`
 }
 
 func GetConf() {
