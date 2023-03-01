@@ -8,26 +8,24 @@ import (
 	"Messenger/internal/resolver"
 	"Messenger/webapi"
 	"Messenger/webapi/handlers"
-	"log"
-	"os"
 )
 
 func main() {
 	// getting config from config file
 	config.GetConf()
 
-	dbProvider := database.NewDbProvider(logger.NewLogger(log.New(os.Stderr, "[Database] ", log.LstdFlags)))
+	dbProvider := database.NewDbProvider(logger.NewLogger("[Database] "))
 	db := dbProvider.Run()
 
-	cache := cache.NewCache(logger.NewLogger(log.New(os.Stderr, "[Database] ", log.LstdFlags)), db)
+	cache := cache.NewCache(logger.NewLogger("[Database]"), db)
 	cache.Start()
 
 	hub := resolver.NewHub()
 
-	resolverLog := logger.NewLogger(log.New(os.Stderr, "[Resolver] ", log.LstdFlags))
-	res := resolver.Init(db, resolverLog)
+	resolverLog := logger.NewLogger("[Resolver]")
+	res := resolver.Init(resolverLog, cache)
 
-	handlerLog := logger.NewLogger(log.New(os.Stderr, "[Handler] ", log.LstdFlags))
+	handlerLog := logger.NewLogger("[Handler]")
 	h := handlers.Init(handlerLog, res, hub)
 
 	api := webapi.NewWebapi(db, res, hub, h)

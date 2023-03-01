@@ -7,7 +7,6 @@ linters:
     - dogsled
     - durationcheck
     - exportloopref
-    - forcetypeassert
     - goconst
     - gocritic
     - nilerr

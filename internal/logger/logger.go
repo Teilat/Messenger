@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"log"
+	"os"
 )
 
 const (
@@ -22,9 +23,9 @@ type Logger struct {
 	Log *log.Logger
 }
 
-func NewLogger(log *log.Logger) *Logger {
+func NewLogger(prefix string) *Logger {
 	return &Logger{
-		Log: log,
+		Log: log.New(os.Stderr, prefix, log.LstdFlags),
 	}
 }
 
