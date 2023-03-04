@@ -1,5 +1,5 @@
 BINARY_NAME := $(shell git config --get remote.origin.url | awk -F/ '{print $$5}' | awk -F. '{print tolower($$1)}')
-BINARY_VERSION := $(shell git describe --tags)
+BINARY_VERSION := $(shell git describe --always)
 BINARY_BUILD_DATE := $(shell date +%d.%m.%Y)
 WIN_BINARY_NAME := $(BINARY_NAME).exe
 BUILD_FOLDER := .build
