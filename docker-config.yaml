@@ -1,9 +1,9 @@
 Postgresql:
-  Host: "localhost"
-  Port: 5433
+  Host: "postgres"
+  Port: 5432
   User: "postgres"
   Pass: "postgrespw"
   Db: "mainDb"
 Api:
-  Address: "localhost"
-  Port: 8081
+  Address: "0.0.0.0"
+  Port: 8080

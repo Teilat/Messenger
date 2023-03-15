@@ -1,6 +1,6 @@
 module Messenger
 
-go 1.18
+go 1.20
 
 require (
 	github.com/appleboy/gin-jwt/v2 v2.9.0
