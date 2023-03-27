@@ -6,7 +6,7 @@ import (
 )
 
 type Message struct {
-	Id            uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	BaseModel
 	IntId         uint32
 	Text          string
 	CreatedAt     time.Time `gorm:"default:(now() at time zone 'msk')"`

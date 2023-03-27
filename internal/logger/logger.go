@@ -16,6 +16,8 @@ const (
 	Cyan   = "\033[36m"
 	Gray   = "\033[37m"
 	White  = "\033[97m"
+
+	NewLine = "\n"
 )
 
 type Logger struct {
@@ -29,18 +31,18 @@ func NewLogger(prefix string) *Logger {
 	}
 }
 
-func (l *Logger) Info(text string) {
-	fmt.Println(Blue + text + Reset)
+func (l *Logger) Info(text string, v ...any) {
+	fmt.Printf(Blue+text+Reset+NewLine, v)
 }
 
-func (l *Logger) Debug(text string) {
-	fmt.Println(Cyan + text + Reset)
+func (l *Logger) Debug(text string, v ...any) {
+	fmt.Printf(Cyan+text+Reset+NewLine, v)
 }
 
 func (l *Logger) Warning(text string, v ...any) {
-	fmt.Println(Yellow + text + Reset)
+	fmt.Printf(Yellow+text+Reset+NewLine, v)
 }
 
 func (l *Logger) Error(text string, v ...any) {
-	fmt.Println(Red + text + Reset)
+	fmt.Printf(Red+text+Reset+NewLine, v)
 }

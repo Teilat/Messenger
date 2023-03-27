@@ -4,7 +4,6 @@ import (
 	"Messenger/internal/database"
 	"Messenger/internal/logger"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type Cache interface {
@@ -42,7 +41,6 @@ type DeleteMessage struct {
 }
 
 type cache struct {
-	db  *gorm.DB
 	log *logger.Logger
 
 	user    map[uuid.UUID]*database.User
@@ -51,15 +49,21 @@ type cache struct {
 
 	updateChan chan UpdateMessage
 	deleteChan chan DeleteMessage
+
+	getSnapshot func() ([]*database.User, []*database.Message, []*database.Chat)
 }
 
-func NewCache(logger *logger.Logger, db *gorm.DB) Cache {
+func NewCache(
+	logger *logger.Logger,
+	snapshotFunc func() ([]*database.User, []*database.Message, []*database.Chat),
+) Cache {
 	return &cache{
-		db:  db,
-		log: logger,
+		getSnapshot: snapshotFunc,
+		log:         logger,
 	}
 }
 func (c *cache) Start() (Cache, chan UpdateMessage, chan DeleteMessage) {
+	c.convertSnapshot(c.getSnapshot())
 	go c.run()
 	return c, c.updateChan, c.deleteChan
 }
@@ -70,4 +74,49 @@ func (c *cache) run() {
 	for {
 		select {}
 	}
+}
+
+func (c *cache) convertSnapshot(usr []*database.User, msg []*database.Message, chat []*database.Chat) {
+	c.user = convertUsers(c.log, usr)
+	c.chat = convertChats(c.log, chat)
+	c.message = convertMessages(c.log, msg)
+}
+
+func convertUsers(log *logger.Logger, usr []*database.User) map[uuid.UUID]*database.User {
+	res := make(map[uuid.UUID]*database.User)
+	for _, u := range usr {
+		id := u.GetId()
+		if id == uuid.Nil {
+			id = uuid.New()
+			log.Warning("User with name:%s has empty id, new id:%s", u.Name, id)
+		}
+		res[id] = u
+	}
+	return res
+}
+
+func convertChats(log *logger.Logger, usr []*database.Chat) map[uuid.UUID]*database.Chat {
+	res := make(map[uuid.UUID]*database.Chat)
+	for _, u := range usr {
+		id := u.GetId()
+		if id == uuid.Nil {
+			id = uuid.New()
+			log.Warning("Chat with name:%s has empty id, new id:%s", u.Name, id)
+		}
+		res[id] = u
+	}
+	return res
+}
+
+func convertMessages(log *logger.Logger, usr []*database.Message) map[uuid.UUID]*database.Message {
+	res := make(map[uuid.UUID]*database.Message)
+	for _, u := range usr {
+		id := u.GetId()
+		if id == uuid.Nil {
+			id = uuid.New()
+			log.Warning("Message has empty id, new id:%s", id)
+		}
+		res[id] = u
+	}
+	return res
 }

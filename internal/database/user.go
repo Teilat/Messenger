@@ -1,13 +1,12 @@
 package database
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
 type User struct {
-	Id         uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
-	Username   string    `gorm:"index:,unique"` // starts with @
+	BaseModel
+	Username   string `gorm:"index:,unique"` // starts with @
 	Name       string
 	Bio        string
 	Phone      string

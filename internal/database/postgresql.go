@@ -55,3 +55,20 @@ func (db *Database) Start() (*Database, error) {
 
 	return db, nil
 }
+
+func (db *Database) GetSnapshot() ([]*User, []*Message, []*Chat) {
+	var msg []*Message
+	var chat []*Chat
+	var usr []*User
+
+	db.Database.Find(&msg)
+	db.log.Info("Loaded %d messages into snapshot", len(msg))
+
+	db.Database.Preload("Messages").Find(&chat)
+	db.log.Info("Loaded %d chats into snapshot", len(msg))
+
+	db.Database.Preload("Messages").Preload("Chats").Find(&usr)
+	db.log.Info("Loaded %d users into snapshot", len(msg))
+
+	return usr, msg, chat
+}

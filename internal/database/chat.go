@@ -2,12 +2,11 @@ package database
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"time"
 )
 
 type Chat struct {
-	Id        uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+	BaseModel
 	Name      string
 	CreatedAt time.Time `gorm:"default:(now() at time zone 'msk')"`
 	Users     []*User   `gorm:"many2many:user_chats;"` // many to many
