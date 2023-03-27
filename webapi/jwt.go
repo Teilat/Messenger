@@ -39,7 +39,7 @@ func authFunc(resolver *resolver.Resolver) func(c *gin.Context) (interface{}, er
 		if err := c.ShouldBind(&loginVals); err != nil {
 			return "", jwt.ErrMissingLoginValues
 		}
-		if !helpers.CheckUserPass(resolver.Db, loginVals) {
+		if !helpers.CheckUserPass(resolver.Cache, loginVals) {
 			return "", jwt.ErrFailedAuthentication
 		}
 		return &models.Login{

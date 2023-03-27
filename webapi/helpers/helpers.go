@@ -1,23 +1,22 @@
 package helpers
 
 import (
-	"Messenger/internal/database"
+	"Messenger/internal/cache"
 	"Messenger/webapi/models"
-	"fmt"
-	"gorm.io/gorm"
 	"strings"
 )
 
-func CheckUserPass(db *gorm.DB, credentials models.Login) bool {
-	user := database.User{}
-	res := db.Where("username = ?", credentials.Username).First(&user)
-	if res.Error != nil {
-		fmt.Printf("Cant find user error:%s", res.Error.Error())
+func CheckUserPass(c cache.Cache, credentials models.Login) bool {
+	user, ok := c.UserByName(credentials.Username)
+	if !ok {
+		return false
 	}
-
+	if EmptyCredentials(credentials) {
+		return false
+	}
 	return user.PwHash == credentials.Password
 }
 
-func EmptyUserPass(credentials models.Login) bool {
+func EmptyCredentials(credentials models.Login) bool {
 	return strings.Trim(credentials.Username, " ") == "" || strings.Trim(credentials.Password, " ") == ""
 }

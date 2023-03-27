@@ -6,13 +6,13 @@ import (
 )
 
 type Resolver struct {
-	*logger.Logger
-	MessageCache cache.Cache
+	Logger *logger.Logger
+	Cache  cache.Cache
 }
 
 func Init(log *logger.Logger, cache cache.Cache) *Resolver {
 	return &Resolver{
-		Logger:       log,
-		MessageCache: cache,
+		Logger: log,
+		Cache:  cache,
 	}
 }

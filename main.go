@@ -7,29 +7,24 @@ import (
 	"Messenger/internal/logger"
 	"Messenger/internal/resolver"
 	"Messenger/webapi"
-	"Messenger/webapi/handlers"
 )
 
 func main() {
 	// getting config from config file
 	config.GetConf()
 
-	dbProvider := database.NewDbProvider(logger.NewLogger("[Database] "))
-	db := dbProvider.Run()
+	// Initiate and start database connection
+	db, err := database.NewDbProvider(logger.NewLogger("[Database] ")).Start()
+	// Initiate and start cache
+	cache, updChan, delChan := cache.NewCache(logger.NewLogger("[Database]"), db.Database).Start()
+	// Start database updater with channels from cache
+	db.StartUpdateListener(updChan, delChan)
 
-	cache := cache.NewCache(logger.NewLogger("[Database]"), db)
-	cache.Start()
+	// Initiate internal resolvers
+	res := resolver.Init(logger.NewLogger("[Resolver]"), cache)
 
-	hub := resolver.NewHub()
-
-	resolverLog := logger.NewLogger("[Resolver]")
-	res := resolver.Init(resolverLog, cache)
-
-	handlerLog := logger.NewLogger("[Handler]")
-	h := handlers.Init(handlerLog, res, hub)
-
-	api := webapi.NewWebapi(db, res, hub, h)
-	err := api.Run()
+	api := webapi.NewWebapi(logger.NewLogger("[Handler]"), res)
+	err = api.Run()
 	if err != nil {
 		return
 	}

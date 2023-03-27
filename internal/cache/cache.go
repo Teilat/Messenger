@@ -8,9 +8,10 @@ import (
 )
 
 type Cache interface {
-	Start() (chan UpdateMessage, chan DeleteMessage)
+	Start() (Cache, chan UpdateMessage, chan DeleteMessage)
 
 	Chat(id uuid.UUID) (*database.Chat, bool)
+	ChatsByUser(user *database.User) []*database.Chat
 	CreateChat(chat *database.Chat) error
 	UpdateChat(chat *database.Chat) error
 	DeleteChat(id uuid.UUID) error
@@ -21,6 +22,8 @@ type Cache interface {
 	DeleteMessage(id uuid.UUID, deleteForAll bool) error
 
 	User(id uuid.UUID) (*database.User, bool)
+	UserByName(username string) (*database.User, bool)
+	UsersByNames(usernames []string) []*database.User
 	CreateUser(user *database.User) error
 	UpdateUser(user *database.User) error
 	DeleteUser(id uuid.UUID) error
@@ -56,9 +59,9 @@ func NewCache(logger *logger.Logger, db *gorm.DB) Cache {
 		log: logger,
 	}
 }
-func (c *cache) Start() (chan UpdateMessage, chan DeleteMessage) {
+func (c *cache) Start() (Cache, chan UpdateMessage, chan DeleteMessage) {
 	go c.run()
-	return c.updateChan, c.deleteChan
+	return c, c.updateChan, c.deleteChan
 }
 
 func (c *cache) run() {

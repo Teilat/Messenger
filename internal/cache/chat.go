@@ -7,16 +7,21 @@ import (
 )
 
 func (c *cache) CreateChat(chat *database.Chat) error {
-	// check if chat exist
-	if _, ok := c.chat[chat.Id]; ok {
-		return fmt.Errorf("chat with id:%d already exist", chat.Id)
-	}
-
 	c.chat[chat.Id] = chat
 
 	// send updates in chan
 	c.updateChan <- UpdateMessage{Chat: []*database.Chat{chat}}
 	return nil
+}
+
+func (c *cache) ChatsByUser(user *database.User) []*database.Chat {
+	res := make([]*database.Chat, 0)
+	for _, chat := range c.chat {
+		if contains(chat.Users, user) {
+			res = append(res, chat)
+		}
+	}
+	return res
 }
 
 func (c *cache) UpdateChat(UpdatedChat *database.Chat) error {

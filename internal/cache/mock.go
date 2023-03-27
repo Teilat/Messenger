@@ -11,7 +11,23 @@ type mockCache struct {
 	chat    []*database.Chat
 }
 
-func (m mockCache) Start() (chan UpdateMessage, chan DeleteMessage) {
+func (m mockCache) Start() (Cache, chan UpdateMessage, chan DeleteMessage) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m mockCache) ChatsByUser(user *database.User) []*database.Chat {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m mockCache) UserByName(username string) (*database.User, bool) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m mockCache) UsersByNames(usernames []string) []*database.User {
+	//TODO implement me
 	panic("implement me")
 }
 

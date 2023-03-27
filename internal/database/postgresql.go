@@ -2,19 +2,25 @@ package database
 
 import (
 	"Messenger/internal/logger"
+	"errors"
 	"fmt"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"time"
 )
 
-type DbProvider struct {
+type Database struct {
+	Database *gorm.DB
+
+	log *logger.Logger
+
 	connString string
-	log        *logger.Logger
+	retryCount int
 }
 
-func NewDbProvider(log *logger.Logger) *DbProvider {
-	return &DbProvider{
+func NewDbProvider(log *logger.Logger) *Database {
+	return &Database{
 		connString: fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
 			viper.Get("postgresql.user"),
 			viper.Get("postgresql.pass"),
@@ -24,17 +30,28 @@ func NewDbProvider(log *logger.Logger) *DbProvider {
 		log: log}
 }
 
-func (p DbProvider) Run() *gorm.DB {
-	db, err := gorm.Open(postgres.Open(p.connString), &gorm.Config{})
-	if err != nil {
-		p.log.Error("error while connecting to database:" + err.Error())
-		return nil
+func (db *Database) Start() (*Database, error) {
+	var err error
+
+	db.log.Info("Connecting")
+	db.Database, err = gorm.Open(postgres.Open(db.connString), &gorm.Config{})
+	for i := 1; err != nil || i > db.retryCount; i++ {
+		db.log.Error("Error while connecting error:%#v \nRetry №%d in %d seconds.\n", err.Error(), i, i*2)
+		err = nil
+
+		time.Sleep(time.Second * time.Duration(i*2))
+		db.Database, err = gorm.Open(postgres.Open(db.connString), &gorm.Config{})
 	}
+
+	if err != nil {
+		return nil, errors.New("error while connecting to database:" + err.Error())
+	}
+	db.log.Info("Connected")
 	// creating tables from code models
-	err = db.AutoMigrate(&User{}, &Chat{}, &Message{})
+	err = db.Database.AutoMigrate(&User{}, &Chat{}, &Message{})
 	if err != nil {
-		p.log.Error("error migrating database:" + err.Error())
-		return nil
+		return nil, errors.New("error migrating database:" + err.Error())
 	}
-	return db
+
+	return db, nil
 }

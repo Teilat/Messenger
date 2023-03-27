@@ -12,25 +12,23 @@ import (
 	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"gorm.io/gorm"
 )
 
 type WebApiProvider struct {
 	address  string
 	logger   *logger.Logger
-	database *gorm.DB
 	resolver *resolver.Resolver
-	hub      *resolver.Hub
 	handler  *handlers.Handlers
 }
 
-func NewWebapi(db *gorm.DB, res *resolver.Resolver, hub *resolver.Hub, handlers *handlers.Handlers) *WebApiProvider {
+func NewWebapi(log *logger.Logger, res *resolver.Resolver) *WebApiProvider {
 	return &WebApiProvider{
-		address:  fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port")),
-		database: db,
+		address: fmt.Sprintf("%s:%d", viper.Get("api.address"), viper.Get("api.port")),
+		logger:  log,
+
 		resolver: res,
-		hub:      hub,
-		handler:  handlers,
+		// Initiate webapi handlers
+		handler: handlers.Init(logger.NewLogger("[Handler]"), res),
 	}
 }
 
@@ -41,8 +39,6 @@ func NewWebapi(db *gorm.DB, res *resolver.Resolver, hub *resolver.Hub, handlers 
 // @name Authorization
 
 func (w WebApiProvider) Run() error {
-	go w.hub.Run()
-
 	authMiddleware, err := jwt.New(newJwtMiddleware(w.resolver, true))
 	if err != nil {
 		w.logger.Error("JWT Error:" + err.Error())

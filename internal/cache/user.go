@@ -45,3 +45,31 @@ func (c *cache) User(id uuid.UUID) (*database.User, bool) {
 	u, ok := c.user[id]
 	return u, ok
 }
+
+func (c *cache) UserByName(username string) (*database.User, bool) {
+	for _, user := range c.user {
+		if user.Name == username {
+			return user, true
+		}
+	}
+	return nil, false
+}
+
+func (c *cache) UsersByNames(usernames []string) []*database.User {
+	res := make([]*database.User, 0)
+	for _, user := range c.user {
+		if contains(usernames, user.Name) {
+			res = append(res, user)
+		}
+	}
+	return res
+}
+
+func contains[T comparable](items []T, search T) bool {
+	for _, item := range items {
+		if search == item {
+			return true
+		}
+	}
+	return false
+}

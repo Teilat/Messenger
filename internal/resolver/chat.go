@@ -1,28 +1,30 @@
 package resolver
 
 import (
+	"Messenger/internal/cache"
 	"Messenger/internal/database"
 	"Messenger/webapi/models"
 	"fmt"
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"sort"
 	"strconv"
 	"time"
 )
 
 func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
-	resp := r.Db.Create(&database.Chat{
+	id := uuid.New()
+	err := r.Cache.CreateChat(&database.Chat{
+		Id:        id,
 		Name:      chat.Name,
 		CreatedAt: time.Now(),
-		Users:     makeUsersForChat(r.Db, chat.Users),
+		Users:     makeUsersForChat(r.Cache, chat.Users),
 		Messages:  nil,
 	})
-	if resp.Error != nil {
-		return nil, resp.Error
+	if err != nil {
+		return nil, err
 	}
 
-	res, ok := resp.Statement.Model.(*database.Chat)
+	res, ok := r.Cache.Chat(id)
 	if !ok {
 		return nil, fmt.Errorf("falied to type assert")
 	}
@@ -30,30 +32,26 @@ func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
 }
 
 func (r Resolver) GetUserChats(userId string) []*database.Chat {
-	var chats []*database.Chat
-	var res []*database.Chat
-	r.Db.
-		Preload("Users").
-		Preload("Messages").
-		Find(&chats)
-
-	// TODO сделать фильтрацию через запрос
-	for _, chat := range chats {
-		for _, user := range chat.Users {
-			if user.Username == userId {
-				res = append(res, chat)
-			}
-		}
+	id, _ := uuid.Parse(userId)
+	user, ok := r.Cache.User(id)
+	if !ok {
+		r.Logger.Warning("User with id %s not found", userId)
+		return nil
 	}
-	sort.Slice(res, func(i, j int) bool {
-		return res[i].CreatedAt.Before(res[j].CreatedAt)
+
+	chats := r.Cache.ChatsByUser(user)
+
+	// Sort chats by creation date TODO:sort by last msg date
+	sort.Slice(chats, func(i, j int) bool {
+		return chats[i].CreatedAt.Before(chats[j].CreatedAt)
 	})
-	for _, re := range res {
-		sort.Slice(re.Messages, func(i, j int) bool {
-			return re.Messages[i].CreatedAt.Before(re.Messages[j].CreatedAt)
+	// Sort messages in chat by creation date
+	for _, chat := range chats {
+		sort.Slice(chat.Messages, func(i, j int) bool {
+			return chat.Messages[i].CreatedAt.Before(chat.Messages[j].CreatedAt)
 		})
 	}
-	return res
+	return chats
 }
 
 func (r Resolver) ChatIdToUUID(chatId string, userId string) uuid.UUID {
@@ -73,8 +71,6 @@ func (r Resolver) chatFromChatId(userId, chatId string) (*database.Chat, error) 
 	return chats[chat], nil
 }
 
-func makeUsersForChat(db *gorm.DB, usernames []string) []*database.User {
-	user := make([]*database.User, 0)
-	db.Preload("Chats").Where("username IN ?", usernames).Find(&user)
-	return user
+func makeUsersForChat(c cache.Cache, usernames []string) []*database.User {
+	return c.UsersByNames(usernames)
 }

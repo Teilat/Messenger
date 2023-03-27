@@ -34,6 +34,10 @@ func (l *Logger) Info(text string) {
 }
 
 func (l *Logger) Debug(text string) {
+	fmt.Println(Cyan + text + Reset)
+}
+
+func (l *Logger) Warning(text string, v ...any) {
 	fmt.Println(Yellow + text + Reset)
 }
 

@@ -20,7 +20,9 @@ type Handlers struct {
 	hub      *resolver.Hub
 }
 
-func Init(log *logger.Logger, res *resolver.Resolver, hub *resolver.Hub) *Handlers {
+func Init(log *logger.Logger, res *resolver.Resolver) *Handlers {
+	hub := resolver.NewHub()
+	hub.Run()
 	return &Handlers{
 		log: log,
 		upgrader: &websocket.Upgrader{
