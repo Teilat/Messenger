@@ -33,7 +33,7 @@ func (c *cache) CreateChat(chat *database.Chat) error {
 	if _, ok := c.message[chat.Id]; ok {
 		return fmt.Errorf("msg with id:%d already exist", chat.Id)
 	}
-	if err := c.validateChat(chat); err != nil {
+	if err := validateChat(chat); err != nil {
 		return err
 	}
 	c.chat[chat.Id] = chat
@@ -46,9 +46,9 @@ func (c *cache) CreateChat(chat *database.Chat) error {
 func (c *cache) UpdateChat(updatedChat *database.Chat) error {
 	// check if chat exist
 	if _, ok := c.chat[updatedChat.Id]; !ok {
-		return fmt.Errorf("chat with id:%d does not exist", updatedChat.Id)
+		return fmt.Errorf("chat with id:%s does not exist", updatedChat.Id.String())
 	}
-	if err := c.validateChat(updatedChat); err != nil {
+	if err := validateChat(updatedChat); err != nil {
 		return err
 	}
 	c.chat[updatedChat.Id] = updatedChat
@@ -63,7 +63,7 @@ func (c *cache) DeleteChat(id uuid.UUID) error {
 	// check if chat exist
 	deletedChat, ok := c.chat[id]
 	if !ok {
-		return fmt.Errorf("chat with id:%d does not exist", id)
+		return fmt.Errorf("chat with id:%s does not exist", id.String())
 	}
 	// iterate over all chat users and remove chat from them
 	for _, u := range deletedChat.Users {
@@ -81,7 +81,7 @@ func (c *cache) DeleteChat(id uuid.UUID) error {
 	return nil
 }
 
-func (c *cache) validateChat(chat *database.Chat) error {
+func validateChat(chat *database.Chat) error {
 	var err error
 	if chat.Id == uuid.Nil {
 		err = errors.Join(err, fmt.Errorf("id nil or emprty"))

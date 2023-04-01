@@ -18,7 +18,7 @@ type Cache interface {
 	Message(id uuid.UUID) (*database.Message, bool)
 	CreateMessage(msg *database.Message) error
 	UpdateMessage(msg *database.Message) error
-	DeleteMessage(id uuid.UUID, deleteForAll bool) error
+	DeleteMessage(id uuid.UUID) error
 
 	User(id uuid.UUID) (*database.User, bool)
 	UserByName(username string) (*database.User, bool)

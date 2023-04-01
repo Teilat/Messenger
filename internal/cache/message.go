@@ -2,16 +2,19 @@ package cache
 
 import (
 	"Messenger/internal/database"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"time"
 )
 
 func (c *cache) CreateMessage(msg *database.Message) error {
 	if _, ok := c.message[msg.Id]; ok {
-		return fmt.Errorf("msg with id:%d already exist", msg.Id)
+		return fmt.Errorf("msg with id:%s already exist", msg.Id.String())
 	}
-	msg.CreatedAt = time.Now()
+	err := validateMessage(msg)
+	if err != nil {
+		return err
+	}
 	c.message[msg.Id] = msg
 
 	c.updateChan <- database.UpdateMessage{Message: []*database.Message{msg}}
@@ -20,10 +23,12 @@ func (c *cache) CreateMessage(msg *database.Message) error {
 
 func (c *cache) UpdateMessage(msg *database.Message) error {
 	if _, ok := c.message[msg.Id]; !ok {
-		return fmt.Errorf("msg with id:%d does not exist", msg.Id)
+		return fmt.Errorf("msg with id:%s does not exist", msg.Id.String())
 	}
-
-	msg.EditedAt = time.Now()
+	err := validateMessage(msg)
+	if err != nil {
+		return err
+	}
 	c.message[msg.Id] = msg
 
 	// send updates in chan
@@ -32,15 +37,11 @@ func (c *cache) UpdateMessage(msg *database.Message) error {
 	return nil
 }
 
-func (c *cache) DeleteMessage(id uuid.UUID, deletedForAll bool) error {
+func (c *cache) DeleteMessage(id uuid.UUID) error {
 	msg, ok := c.message[id]
-	if ok {
-		return fmt.Errorf("msg with id:%d does not exist", id)
+	if !ok {
+		return fmt.Errorf("msg with id:%s does not exist", id.String())
 	}
-
-	// update msg deleted at
-	msg.DeletedAt = time.Now()
-	msg.DeletedForAll = deletedForAll
 
 	// send updates in chan
 	c.updateChan <- database.UpdateMessage{Message: []*database.Message{msg}}
@@ -52,5 +53,22 @@ func (c *cache) Message(id uuid.UUID) (*database.Message, bool) {
 	if !ok {
 		return nil, false
 	}
+	if msg.DeletedForAll {
+		return nil, false
+	}
 	return msg, ok
+}
+
+func validateMessage(msg *database.Message) error {
+	var err error
+	if msg.Id == uuid.Nil {
+		err = errors.Join(err, fmt.Errorf("id nil or emprty"))
+	}
+	if msg.ChatId == uuid.Nil {
+		err = errors.Join(err, fmt.Errorf("chat id nil or emprty"))
+	}
+	if msg.Username == "" {
+		err = errors.Join(err, fmt.Errorf("username emprty"))
+	}
+	return err
 }
