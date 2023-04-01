@@ -65,10 +65,10 @@ func (db *Database) GetSnapshot() ([]*User, []*Message, []*Chat) {
 	db.log.Info("Loaded %d messages into snapshot", len(msg))
 
 	db.Database.Preload("Messages").Find(&chat)
-	db.log.Info("Loaded %d chats into snapshot", len(msg))
+	db.log.Info("Loaded %d chats into snapshot", len(chat))
 
 	db.Database.Preload("Messages").Preload("Chats").Find(&usr)
-	db.log.Info("Loaded %d users into snapshot", len(msg))
+	db.log.Info("Loaded %d users into snapshot", len(usr))
 
 	return usr, msg, chat
 }

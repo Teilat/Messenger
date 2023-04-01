@@ -7,9 +7,11 @@ import (
 	"Messenger/internal/logger"
 	"Messenger/internal/resolver"
 	"Messenger/webapi"
+	"context"
 )
 
 func main() {
+	ctx := context.Background()
 	// getting config from config file
 	config.GetConf()
 
@@ -18,7 +20,7 @@ func main() {
 	// Initiate and start cache
 	cache, updChan, delChan := cache.NewCache(logger.NewLogger("[Cache]"), db.GetSnapshot).Start()
 	// Start database updater with channels from cache
-	db.StartUpdateListener(updChan, delChan)
+	db.StartUpdateListener(ctx, updChan, delChan)
 
 	// Initiate internal resolvers
 	res := resolver.Init(logger.NewLogger("[Resolver]"), cache)

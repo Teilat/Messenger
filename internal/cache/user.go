@@ -14,7 +14,7 @@ func (c *cache) CreateUser(user *database.User) error {
 	user.CreatedAt = time.Now()
 	c.user[user.Id] = user
 
-	c.updateChan <- UpdateMessage{User: []*database.User{user}}
+	c.updateChan <- database.UpdateMessage{User: []*database.User{user}}
 	return nil
 }
 
@@ -24,7 +24,7 @@ func (c *cache) UpdateUser(user *database.User) error {
 	}
 	c.user[user.Id] = user
 
-	c.updateChan <- UpdateMessage{User: []*database.User{user}}
+	c.updateChan <- database.UpdateMessage{User: []*database.User{user}}
 	return nil
 }
 
@@ -36,13 +36,16 @@ func (c *cache) DeleteUser(id uuid.UUID) error {
 
 	delete(c.user, id)
 
-	c.deleteChan <- DeleteMessage{User: []uuid.UUID{id}}
-	c.updateChan <- UpdateMessage{User: []*database.User{usr}}
+	c.deleteChan <- database.DeleteMessage{User: []uuid.UUID{id}}
+	c.updateChan <- database.UpdateMessage{User: []*database.User{usr}}
 	return nil
 }
 
 func (c *cache) User(id uuid.UUID) (*database.User, bool) {
 	u, ok := c.user[id]
+	if !ok {
+		return nil, false
+	}
 	return u, ok
 }
 
@@ -63,13 +66,4 @@ func (c *cache) UsersByNames(usernames []string) []*database.User {
 		}
 	}
 	return res
-}
-
-func contains[T comparable](items []T, search T) bool {
-	for _, item := range items {
-		if search == item {
-			return true
-		}
-	}
-	return false
 }

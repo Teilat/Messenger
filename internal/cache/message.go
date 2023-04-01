@@ -14,7 +14,7 @@ func (c *cache) CreateMessage(msg *database.Message) error {
 	msg.CreatedAt = time.Now()
 	c.message[msg.Id] = msg
 
-	c.updateChan <- UpdateMessage{Message: []*database.Message{msg}}
+	c.updateChan <- database.UpdateMessage{Message: []*database.Message{msg}}
 	return nil
 }
 
@@ -27,7 +27,7 @@ func (c *cache) UpdateMessage(msg *database.Message) error {
 	c.message[msg.Id] = msg
 
 	// send updates in chan
-	c.updateChan <- UpdateMessage{Message: []*database.Message{msg}}
+	c.updateChan <- database.UpdateMessage{Message: []*database.Message{msg}}
 
 	return nil
 }
@@ -43,11 +43,14 @@ func (c *cache) DeleteMessage(id uuid.UUID, deletedForAll bool) error {
 	msg.DeletedForAll = deletedForAll
 
 	// send updates in chan
-	c.updateChan <- UpdateMessage{Message: []*database.Message{msg}}
+	c.updateChan <- database.UpdateMessage{Message: []*database.Message{msg}}
 	return nil
 }
 
 func (c *cache) Message(id uuid.UUID) (*database.Message, bool) {
 	msg, ok := c.message[id]
+	if !ok {
+		return nil, false
+	}
 	return msg, ok
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type Cache interface {
-	Start() (Cache, chan UpdateMessage, chan DeleteMessage)
+	Start() (Cache, chan database.UpdateMessage, chan database.DeleteMessage)
 
 	Chat(id uuid.UUID) (*database.Chat, bool)
 	ChatsByUser(user *database.User) []*database.Chat
@@ -28,18 +28,6 @@ type Cache interface {
 	DeleteUser(id uuid.UUID) error
 }
 
-type UpdateMessage struct {
-	User    []*database.User
-	Message []*database.Message
-	Chat    []*database.Chat
-}
-
-type DeleteMessage struct {
-	User    []uuid.UUID
-	Message []uuid.UUID
-	Chat    []uuid.UUID
-}
-
 type cache struct {
 	log *logger.Logger
 
@@ -47,8 +35,8 @@ type cache struct {
 	message map[uuid.UUID]*database.Message
 	chat    map[uuid.UUID]*database.Chat
 
-	updateChan chan UpdateMessage
-	deleteChan chan DeleteMessage
+	updateChan chan database.UpdateMessage
+	deleteChan chan database.DeleteMessage
 
 	getSnapshot func() ([]*database.User, []*database.Message, []*database.Chat)
 }
@@ -62,18 +50,11 @@ func NewCache(
 		log:         logger,
 	}
 }
-func (c *cache) Start() (Cache, chan UpdateMessage, chan DeleteMessage) {
+func (c *cache) Start() (Cache, chan database.UpdateMessage, chan database.DeleteMessage) {
 	c.convertSnapshot(c.getSnapshot())
-	go c.run()
+	c.updateChan = make(chan database.UpdateMessage)
+	c.deleteChan = make(chan database.DeleteMessage)
 	return c, c.updateChan, c.deleteChan
-}
-
-func (c *cache) run() {
-	c.updateChan = make(chan UpdateMessage)
-	c.deleteChan = make(chan DeleteMessage)
-	for {
-		select {}
-	}
 }
 
 func (c *cache) convertSnapshot(usr []*database.User, msg []*database.Message, chat []*database.Chat) {

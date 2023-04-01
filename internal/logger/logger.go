@@ -32,17 +32,17 @@ func NewLogger(prefix string) *Logger {
 }
 
 func (l *Logger) Info(text string, v ...any) {
-	fmt.Printf(Blue+text+Reset+NewLine, v)
+	fmt.Printf(Blue+text+Reset+NewLine, v...)
 }
 
 func (l *Logger) Debug(text string, v ...any) {
-	fmt.Printf(Cyan+text+Reset+NewLine, v)
+	fmt.Printf(Cyan+text+Reset+NewLine, v...)
 }
 
 func (l *Logger) Warning(text string, v ...any) {
-	fmt.Printf(Yellow+text+Reset+NewLine, v)
+	fmt.Printf(Yellow+text+Reset+NewLine, v...)
 }
 
 func (l *Logger) Error(text string, v ...any) {
-	fmt.Printf(Red+text+Reset+NewLine, v)
+	fmt.Printf(Red+text+Reset+NewLine, v...)
 }

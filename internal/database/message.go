@@ -6,7 +6,7 @@ import (
 )
 
 type Message struct {
-	BaseModel
+	Id            uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
 	IntId         uint32
 	Text          string
 	CreatedAt     time.Time `gorm:"default:(now() at time zone 'msk')"`
@@ -16,4 +16,11 @@ type Message struct {
 	ResponseId    *uint32   `gorm:"foreignKey:IntId"`
 	Username      string    // one to many username
 	ChatId        uuid.UUID // one to many chat id
+}
+
+func (m *Message) GetId() uuid.UUID {
+	if m.Id != uuid.Nil {
+		return m.Id
+	}
+	return uuid.Nil
 }

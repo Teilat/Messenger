@@ -1,21 +1,37 @@
 package database
 
 import (
-	"Messenger/internal/cache"
+	"context"
 	"github.com/google/uuid"
 )
 
-type BaseModel struct {
-	Id uuid.UUID `gorm:"primaryKey;type:uuid;default:gen_random_uuid()"`
+type UpdateMessage struct {
+	User    []*User
+	Message []*Message
+	Chat    []*Chat
 }
 
-func (m BaseModel) GetId() uuid.UUID {
-	if m.Id != uuid.Nil {
-		return m.Id
+type DeleteMessage struct {
+	User    []uuid.UUID
+	Message []uuid.UUID
+	Chat    []uuid.UUID
+}
+
+func (db *Database) StartUpdateListener(ctx context.Context, udp chan UpdateMessage, del chan DeleteMessage) {
+	go db.runUpdateListener(ctx, udp, del)
+}
+
+func (db *Database) runUpdateListener(ctx context.Context, upd chan UpdateMessage, del chan DeleteMessage) {
+	for {
+		select {
+		case <-ctx.Done():
+			db.log.Info("UpdateListener context canceled")
+			return
+		case updMsg := <-upd:
+			db.log.Info("Got messages:%d, users:%d, chats:%d updated", len(updMsg.Message), len(updMsg.User), len(updMsg.Chat))
+		case delMsg := <-del:
+			db.log.Info("Got messages:%d, users:%d, chats:%d deleted", len(delMsg.Message), len(delMsg.User), len(delMsg.Chat))
+			return
+		}
 	}
-	return uuid.Nil
-}
-
-func (db *Database) StartUpdateListener(chan cache.UpdateMessage, chan cache.DeleteMessage) {
-
 }
