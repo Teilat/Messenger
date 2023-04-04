@@ -63,7 +63,7 @@ func Test_Message(t *testing.T) {
 	// delete message
 	msg.DeletedAt = time.Now()
 	msg.DeletedForAll = true
-	err = c.DeleteMessage(msg.Id)
+	err = c.DeleteMessage(msg)
 	assert.NoErrorf(t, err, "DeleteMessage error:%v", err)
 
 	deletedMsg, ok := c.Message(msg.Id)

@@ -37,10 +37,10 @@ func (c *cache) UpdateMessage(msg *database.Message) error {
 	return nil
 }
 
-func (c *cache) DeleteMessage(id uuid.UUID) error {
-	msg, ok := c.message[id]
+func (c *cache) DeleteMessage(msg *database.Message) error {
+	_, ok := c.message[msg.Id]
 	if !ok {
-		return fmt.Errorf("msg with id:%s does not exist", id.String())
+		return fmt.Errorf("msg with id:%s does not exist", msg.Id.String())
 	}
 
 	// send updates in chan

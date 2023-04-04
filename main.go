@@ -17,6 +17,9 @@ func main() {
 
 	// Initiate and start database connection
 	db, err := database.NewDbProvider(logger.NewLogger("[Database] ")).Start()
+	if err != nil {
+		panic(err)
+	}
 	// Initiate and start cache
 	cache, updChan, delChan := cache.NewCache(logger.NewLogger("[Cache]"), db.GetSnapshot).Start()
 	// Start database updater with channels from cache
@@ -28,6 +31,6 @@ func main() {
 	api := webapi.NewWebapi(logger.NewLogger("[Handler]"), res)
 	err = api.Run()
 	if err != nil {
-		return
+		panic(err)
 	}
 }

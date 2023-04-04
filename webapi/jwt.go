@@ -12,9 +12,9 @@ import (
 
 var LoginUser = ""
 
-func newJwtMiddleware(resolver *resolver.Resolver, SendCookie bool) *jwt.GinJWTMiddleware {
+func newJwtMiddleware(resolver *resolver.Resolver, sendCookie bool) *jwt.GinJWTMiddleware {
 	return &jwt.GinJWTMiddleware{
-		SendCookie:  SendCookie,
+		SendCookie:  sendCookie,
 		CookieName:  "jwt",
 		TokenLookup: "header: Authorization, query: token, cookie: jwt",
 		TimeFunc:    time.Now,

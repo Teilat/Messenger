@@ -48,5 +48,8 @@ func (r Resolver) UpdateUserImage(username string, image *multipart.FileHeader) 
 func (r Resolver) updateLastOnline(username string) {
 	usr, _ := r.Cache.UserByName(username)
 	usr.LastOnline = time.Now()
-	r.Cache.UpdateUser(usr)
+	err := r.Cache.UpdateUser(usr)
+	if err != nil {
+		r.Logger.Error(err.Error())
+	}
 }

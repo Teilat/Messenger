@@ -48,7 +48,7 @@ func (w WebApiProvider) Run() error {
 		w.logger.Error("Auth middleware init error:" + errInit.Error())
 	}
 
-	//gin.SetMode(gin.ReleaseMode)
+	// gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	router.Use(gin.Recovery())
 	router.Use(gin.Logger())
@@ -71,7 +71,7 @@ func (w WebApiProvider) Run() error {
 	authGroup.GET("/chat/:id", w.handler.WSChatHandler())
 
 	err = router.Run(w.address)
-	//err := router.RunTLS(address, "./server-cert.pem", "./server-key.pem")
+	// err := router.RunTLS(address, "./server-cert.pem", "./server-key.pem")
 	if err != nil {
 		w.logger.Error(err.Error())
 	}

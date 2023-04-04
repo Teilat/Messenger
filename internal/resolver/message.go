@@ -4,6 +4,7 @@ import (
 	"Messenger/internal/database"
 	"Messenger/webapi/models"
 	"fmt"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -12,18 +13,24 @@ func (r Resolver) CreateWsMessage(msg models.SendMessage, chatId, userId string)
 	if err != nil {
 		return nil, err
 	}
-	res := r.Db.Create(&database.Message{
+	id := uuid.New()
+	err = r.Cache.CreateMessage(&database.Message{
+		Id:        id,
 		IntId:     makeMessageId(chat),
 		Text:      msg.Text,
 		CreatedAt: time.Now(),
 		Username:  userId,
 		ChatId:    chat.Id,
 	})
-	if res.Error != nil {
-		return nil, res.Error
+	if err != nil {
+		return nil, err
 	}
+	res, ok := r.Cache.Message(id)
 
-	return res.Statement.Model.(*database.Message), nil
+	if !ok {
+		return nil, fmt.Errorf("falied to get message")
+	}
+	return res, nil
 }
 
 func (r Resolver) ReplyWsMessage(msg models.ReplyMessage, chatId, userId string) (*database.Message, error) {
@@ -31,7 +38,9 @@ func (r Resolver) ReplyWsMessage(msg models.ReplyMessage, chatId, userId string)
 	if err != nil {
 		return nil, err
 	}
-	resp := r.Db.Create(&database.Message{
+	id := uuid.New()
+	err = r.Cache.CreateMessage(&database.Message{
+		Id:         id,
 		IntId:      makeMessageId(chat),
 		Text:       msg.Text,
 		CreatedAt:  time.Now(),
@@ -39,11 +48,11 @@ func (r Resolver) ReplyWsMessage(msg models.ReplyMessage, chatId, userId string)
 		ChatId:     chat.Id,
 		ResponseId: &msg.ReplyMessageId,
 	})
-	if resp.Error != nil {
-		return nil, resp.Error
+	if err != nil {
+		return nil, err
 	}
 
-	res, ok := resp.Statement.Model.(*database.Message)
+	res, ok := r.Cache.Message(id)
 	if !ok {
 		return nil, fmt.Errorf("falied to type assert")
 	}
@@ -62,11 +71,10 @@ func (r Resolver) EditWsMessage(payload models.EditMessage, chatId, userId strin
 
 	message.Text = payload.NewText
 	message.EditedAt = time.Now()
-	res := r.Db.Save(message)
-	if res.Error != nil {
-		return res.Error
+	err = r.Cache.UpdateMessage(message)
+	if err != nil {
+		return err
 	}
-
 	return nil
 }
 
@@ -81,9 +89,9 @@ func (r Resolver) DeleteWsMessage(payload models.DeleteMessage, chatId, userId s
 	}
 
 	message.DeletedAt = time.Now()
-	res := r.Db.Save(message)
-	if res.Error != nil {
-		return res.Error
+	err = r.Cache.DeleteMessage(message)
+	if err != nil {
+		return err
 	}
 
 	return nil

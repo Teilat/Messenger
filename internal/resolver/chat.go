@@ -26,7 +26,7 @@ func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
 
 	res, ok := r.Cache.Chat(id)
 	if !ok {
-		return nil, fmt.Errorf("falied to type assert")
+		return nil, fmt.Errorf("falied to get chat")
 	}
 	return res, nil
 }
