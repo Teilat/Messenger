@@ -29,7 +29,7 @@ func (c *cache) UpdateUser(user *database.User) error {
 }
 
 func (c *cache) DeleteUser(id uuid.UUID) error {
-	usr, ok := c.user[id]
+	_, ok := c.user[id]
 	if !ok {
 		return fmt.Errorf("usr with id:%d does not exist", id)
 	}
@@ -37,7 +37,6 @@ func (c *cache) DeleteUser(id uuid.UUID) error {
 	delete(c.user, id)
 
 	c.deleteChan <- database.DeleteMessage{User: []uuid.UUID{id}}
-	c.updateChan <- database.UpdateMessage{User: []*database.User{usr}}
 	return nil
 }
 

@@ -21,7 +21,6 @@ const (
 )
 
 type Logger struct {
-	error
 	Log *log.Logger
 }
 

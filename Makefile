@@ -56,4 +56,4 @@ clean: ## Remove vendor and artifacts
 	rm -rf $(BUILD_FOLDER)
 
 lint: vendor
-	docker run --rm -t -v "$(ABS_PATH)":/app -w /app --entrypoint=golangci-lint golangci/golangci-lint:v1.50.1 run -v
+	docker run --rm -t -v "$(ABS_PATH)":/app -w /app --entrypoint=golangci-lint golangci/golangci-lint:v1.52.2 run -v

@@ -18,7 +18,7 @@ func (r Resolver) CreateChat(chat models.AddChat) (*database.Chat, error) {
 		Name:      chat.Name,
 		CreatedAt: time.Now(),
 		Users:     makeUsersForChat(r.Cache, chat.Users),
-		Messages:  nil,
+		Messages:  []database.Message{},
 	})
 	if err != nil {
 		return nil, err

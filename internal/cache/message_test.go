@@ -44,7 +44,7 @@ func Test_Message(t *testing.T) {
 
 	createdMsg, ok := c.Message(msg.Id)
 	if !ok {
-		t.Error("Get chat error")
+		t.Error("Get message error")
 	}
 	assert.Equalf(t, msg, createdMsg, "Messages not equal \nExpected:%+v, \nGot:%+v", msg, createdMsg)
 
@@ -56,7 +56,7 @@ func Test_Message(t *testing.T) {
 
 	updatedMessage, ok := c.Message(msg.Id)
 	if !ok {
-		t.Error("Get chat error")
+		t.Error("Get message error")
 	}
 	assert.Equalf(t, msg, updatedMessage, "Messages not equal \nExpected:%+v, \nGot:%+v", msg, createdMsg)
 
@@ -64,11 +64,11 @@ func Test_Message(t *testing.T) {
 	msg.DeletedAt = time.Now()
 	msg.DeletedForAll = true
 	err = c.DeleteMessage(msg.Id)
-	assert.NoErrorf(t, err, "CreateChat error:%v", err)
+	assert.NoErrorf(t, err, "DeleteMessage error:%v", err)
 
 	deletedMsg, ok := c.Message(msg.Id)
 	if ok {
-		t.Error("Get deleted chat error")
+		t.Error("Get deleted message error")
 	}
-	assert.Equalf(t, (*database.Message)(nil), deletedMsg, "Chats not equal \nExpected:%+v, \nGot:%+v", nil, deletedMsg)
+	assert.Equalf(t, (*database.Message)(nil), deletedMsg, "Messages not equal \nExpected:%+v, \nGot:%+v", nil, deletedMsg)
 }
